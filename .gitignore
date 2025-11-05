@@ -8,7 +8,7 @@
 /backend/venv
 /backend/__pycache__
 /backend/.env
-/backend/transactions.db
+/backend/database/transactions.db
 
 # OS files
 .DS_Store
