@@ -16,7 +16,6 @@ export function InsightsRail({ items }: InsightsRailProps) {
 
   return (
     <section className="relative z-30 mt-8 pb-8">
-      {/* Negative margin lifts the card rail into the header as the page scrolls. */}
       <div className="mx-auto w-full max-w-3xl px-6">
         <div className="overflow-x-auto pb-2">
           <div className="flex gap-4">

@@ -23,7 +23,7 @@ export default function Home() {
       <main className="relative z-10 flex-1 bg-gray-100">
         <InsightsRail items={insightCards} />
 
-        <section className="relative mx-auto w-full max-w-3xl px-6 pb-28">
+        <section className="relative mx-auto w-full max-w-3xl px-6 pb-20">
           <div className="space-y-6">
             <RecurringCostTrackerCard />
             <FreedomTrackerCard />
