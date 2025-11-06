@@ -15,8 +15,8 @@ type AccessibilitySetting =
 
 const profileNavItems = [
   { id: "home", link: "/", label: "Home", icon: FiHome },
-  { id: "ai-assistant", link: "/chat", label: "AI Assistant", icon: FiMessageCircle },
-  { id: "profile", link: "/profile", label: "Profile", icon: FiUser },
+  { id: "Chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
+  { id: "profile", link: "/profile", label: "Profile", icon: FiUser, isActive: true },
 ];
 
 export default function ProfileSettingsPage() {
