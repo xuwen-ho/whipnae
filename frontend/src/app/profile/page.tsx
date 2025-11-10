@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { FiHome, FiMessageCircle, FiUser } from "react-icons/fi";
 
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -20,6 +21,7 @@ const profileNavItems = [
 ];
 
 export default function ProfileSettingsPage() {
+  const router = useRouter();
   const [accessibilitySettings, setAccessibilitySettings] = useState<Record<AccessibilitySetting, boolean>>({
     simpleMode: true,
     visuallyImpairedMode: true,
@@ -33,12 +35,16 @@ export default function ProfileSettingsPage() {
     }));
   };
 
+  const handleStartQuiz = () => {
+    router.push('/profile/quiz');
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
       <header className="sticky top-0 z-0 bg-[#1c3d8f] text-white shadow-lg">
         <div className="mx-auto w-full max-w-3xl px-6">
           <div className="mt-4">
-            <RecommendationsQuizCard onStart={() => {}} />
+            <RecommendationsQuizCard onStart={handleStartQuiz} />
           </div>
         </div>
       </header>
