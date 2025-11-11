@@ -2,8 +2,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from database.database import fetch_transactions
-
 from agents.orchestrator import select_agent
+
 
 app = FastAPI(title="Whipnae Backend", version="0.1.0")
 
@@ -71,22 +71,22 @@ async def get_insights():
 
     cards = [
         {
-            "id": "ai-expenses",
-            "amount": fmt_usd(total_expenses),
-            "description": "AI-detected expenses",
-            "subDescription": "Last 100 txns",
+        "id": "total-income",
+        "amount": f"${total_income:,.2f}",
+        "description": "Total income",
+        "subDescription": "Month-to-date",
         },
         {
-            "id": "net-cashflow",
-            "amount": fmt_usd(net),
-            "description": "Net cash flow",
-            "subDescription": "Income − Expenses",
+        "id": "total-expenses",
+        "amount": f"${abs(total_expenses):,.2f}",
+        "description": "Total expenses",
+        "subDescription": "Month-to-date",
         },
         {
-            "id": "income",
-            "amount": fmt_usd(total_income),
-            "description": "Recognized income",
-            "subDescription": "Last 100 txns",
+        "id": "net-balance",
+        "amount": f"${net:,.2f}",
+        "description": "Net balance",
+        "subDescription": "Current",
         },
     ]
     return cards

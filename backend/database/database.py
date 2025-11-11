@@ -45,6 +45,7 @@ def ensure_database(seed: bool = True) -> None:
 @contextmanager
 def get_connection(seed: bool = True) -> Iterator[sqlite3.Connection]:
     ensure_database(seed=seed)
+    print("DB path:", DB_PATH.resolve())
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     try:
