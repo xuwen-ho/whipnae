@@ -9,14 +9,14 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { useEffect, useState } from "react";
 
 // jovan change this data to fetch fr backend api
-// const insightCards = [
-//   {
-//     id: "ai-expenses",
-//     amount: "$12,000",
-//     description: "AI-detected expenses",
-//     subDescription: "10-Year Growth Potential",
-//   },
-// ];
+const insightCards = [
+  {
+    id: "ai-expenses",
+    amount: "$12,000",
+    description: "AI-detected expenses",
+    subDescription: "10-Year Growth Potential",
+  },
+];
 
 // Source of truth comes from backend now
 type InsightCard = {
@@ -25,6 +25,13 @@ type InsightCard = {
   description: string;
   subDescription: string;
 };
+
+// Format currency the same way everywhere
+const fmt = (n: number | null | undefined) =>
+  typeof n === "number" && !Number.isNaN(n)
+    ? n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 })
+    : "$0";
+
 
 export default function Home() {
   const [insightCards, setInsightCards] = useState<InsightCard[] | null>(null);
@@ -39,8 +46,55 @@ export default function Home() {
       try {
         const res = await fetch(`${API_BASE}/insights`, { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as InsightCard[];
-        setInsightCards(data);
+
+        const d = await res.json(); // rich insights payload from backend
+
+        const cards: InsightCard[] = [
+          {
+            id: "income",
+            amount: fmt(d?.totals?.income),
+            description: "Total income",
+            subDescription: "All time",
+          },
+          {
+            id: "expenses",
+            amount: fmt(d?.totals?.expenses),
+            description: "Total expenses",
+            subDescription: "All time",
+          },
+          {
+            id: "net",
+            amount: fmt(d?.totals?.net),
+            description: "Net",
+            subDescription: "Income − Expenses",
+          },
+          {
+            id: "latest-month",
+            amount: fmt(d?.latest_month?.net ?? 0),
+            description: `Latest month (${d?.latest_month?.month ?? "—"})`,
+            subDescription: `Inc ${fmt(d?.latest_month?.income ?? 0)} / Exp ${fmt(d?.latest_month?.expenses ?? 0)}`,
+          },
+          {
+            id: "top-category",
+            amount: fmt(d?.top_categories?.[0]?.spend ?? 0),
+            description: "Top category (spend)",
+            subDescription: d?.top_categories?.[0]?.name ?? "—",
+          },
+          {
+            id: "top-merchant",
+            amount: fmt(d?.top_merchants?.[0]?.spend ?? 0),
+            description: "Top merchant (spend)",
+            subDescription: d?.top_merchants?.[0]?.name ?? "—",
+          },
+          {
+            id: "biggest-expense-30d",
+            amount: fmt(d?.biggest_expense_30d?.amount ?? 0),
+            description: "Biggest expense (30d)",
+            subDescription: `${d?.biggest_expense_30d?.category ?? "—"} · ${d?.biggest_expense_30d?.merchant ?? "—"}`,
+          },
+        ];
+
+        setInsightCards(cards);
       } catch (e: any) {
         setError(e?.message || "Failed to load insights");
       }
@@ -83,23 +137,23 @@ export default function Home() {
     </div>
   );
 }
-  /*return (
-    <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
-      <HomeHeader balance="$1,200" />
+//   /*return (
+//     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
+//       <HomeHeader balance="$1,200" />
 
-      <main className="relative z-10 flex-1 bg-gray-100">
-        <InsightsRail items={insightCards} />
+//       <main className="relative z-10 flex-1 bg-gray-100">
+//         <InsightsRail items={insightCards} />
 
-        <section className="relative mx-auto w-full max-w-3xl px-6 pb-20">
-          <div className="space-y-6">
-            <RecurringCostTrackerCard />
-            <FreedomTrackerCard />
-            <FinancialToolsCard />
-          </div>
-        </section>
-      </main>
+//         <section className="relative mx-auto w-full max-w-3xl px-6 pb-20">
+//           <div className="space-y-6">
+//             <RecurringCostTrackerCard />
+//             <FreedomTrackerCard />
+//             <FinancialToolsCard />
+//           </div>
+//         </section>
+//       </main>
 
-      <BottomNav />
-    </div>
-  );
-}*/
+//       <BottomNav />
+//     </div>
+//   );
+// }*/
