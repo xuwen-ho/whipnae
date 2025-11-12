@@ -8,16 +8,6 @@ import { RecurringCostTrackerCard } from "@/components/home/RecurringCostTracker
 import { BottomNav } from "@/components/layout/BottomNav";
 import { useEffect, useState } from "react";
 
-// jovan change this data to fetch fr backend api
-const insightCards = [
-  {
-    id: "ai-expenses",
-    amount: "$12,000",
-    description: "AI-detected expenses",
-    subDescription: "10-Year Growth Potential",
-  },
-];
-
 // Source of truth comes from backend now
 type InsightCard = {
   id: string;
@@ -29,13 +19,16 @@ type InsightCard = {
 // Format currency the same way everywhere
 const fmt = (n: number | null | undefined) =>
   typeof n === "number" && !Number.isNaN(n)
-    ? n.toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 2 })
+    ? n.toLocaleString(undefined, { style: "currency", currency: "CNY", maximumFractionDigits: 2 })
     : "$0";
 
 
 export default function Home() {
   const [insightCards, setInsightCards] = useState<InsightCard[] | null>(null);
+  const [balance, setBalance] = useState<string>("$—"); // NEW
   const [error, setError] = useState<string | null>(null);
+  const [freedomMonths, setFreedomMonths] = useState<number | null>(null);
+
 
   // Read from env when possible; default to localhost:8000
   const API_BASE =
@@ -48,6 +41,14 @@ export default function Home() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
         const d = await res.json(); // rich insights payload from backend
+
+        // ✅ Update header balance from backend totals.net
+        setBalance(fmt(d?.totals?.net));
+
+        const net = Number(d?.totals?.net ?? 0);
+        const avgMonthlyExpense = Number(d?.totals?.avg_monthly_expense ?? 0);
+        setFreedomMonths(avgMonthlyExpense > 0 ? net / avgMonthlyExpense : null);
+
 
         const cards: InsightCard[] = [
           {
@@ -103,7 +104,8 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
-      <HomeHeader balance="$1,200" />
+      <HomeHeader balance={balance} />
+
 
       <main className="relative z-10 flex-1 bg-gray-100">
         <InsightsRail
@@ -127,7 +129,7 @@ export default function Home() {
         <section className="relative mx-auto w-full max-w-3xl px-6 pb-20">
           <div className="space-y-6">
             <RecurringCostTrackerCard />
-            <FreedomTrackerCard />
+            <FreedomTrackerCard months={freedomMonths} />
             <FinancialToolsCard />
           </div>
         </section>

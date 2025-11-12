@@ -95,6 +95,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from database.database import fetch_transactions, compute_insights  # NEW
+from database.database import list_recurring, patch_recurring, create_recurring
 
 app = FastAPI()
 app.add_middleware(
@@ -113,3 +114,36 @@ def get_insights():
     if not data.get("ready"):
         raise HTTPException(status_code=500, detail=data.get("reason","insights unavailable"))
     return data
+
+@app.get("/recurring")
+def get_recurring(limit: int = 200):
+    rows = list_recurring(limit=limit)
+    # return rows as plain dicts
+    return {"items": [dict(r) for r in rows]}
+
+@app.patch("/recurring/{rc_id}")
+def update_recurring(rc_id: int, payload: dict):
+    result = patch_recurring(
+        rc_id,
+        name=payload.get("name"),
+        cadence=payload.get("cadence"),
+        amount=payload.get("amount"),
+        currency=payload.get("currency"),
+        recurring=payload.get("recurring"),  # 1 = ON, 0 = OFF
+        notes=payload.get("notes"),
+    )
+    if result.get("updated", 0) == 0:
+        raise HTTPException(status_code=404, detail="Recurring item not found or no changes.")
+    return result["item"]
+
+@app.post("/recurring")
+def post_recurring(payload: dict):
+    item = create_recurring(
+        name=payload["name"],
+        cadence=payload.get("cadence", "Monthly"),
+        amount=float(payload.get("amount", 0)),
+        currency=payload.get("currency", "CNY"),
+        recurring=int(1 if payload.get("recurring", 1) else 0),
+        notes=payload.get("notes", ""),
+    )
+    return item

@@ -28,6 +28,119 @@ SEED_TRANSACTIONS = [
     ("2025-01-25", "Customer refund", -95.00),
 ]
 
+# === Recurring costs schema + helpers =======================================
+
+RECURRING_SCHEMA = """
+CREATE TABLE IF NOT EXISTS recurring_costs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  cadence TEXT NOT NULL,              -- 'Daily' | 'Weekly' | 'Monthly' | 'Yearly'
+  amount REAL NOT NULL DEFAULT 0,     -- amount per cadence
+  currency TEXT NOT NULL DEFAULT 'CNY',
+  recurring INTEGER NOT NULL DEFAULT 1,  -- 1 = ON, 0 = OFF
+  notes TEXT
+);
+"""
+
+SEED_RECURRING = [
+    # --- Your CNY items ---
+    ("房租 - 南山区一居", "Monthly", 3500.00, "CNY", 1, "公寓租金"),
+    ("电费",           "Monthly", 162.92,  "CNY", 1, ""),
+    ("水费",           "Monthly", 44.38,   "CNY", 1, ""),
+    ("燃气费",         "Monthly", 54.74,   "CNY", 1, ""),
+    ("中国移动广东 5G套餐", "Monthly", 68.00, "CNY", 1, ""),
+    ("腾讯视频VIP月费", "Monthly", 20.00,   "CNY", 1, ""),
+    ("爱奇艺VIP月费",  "Monthly", 19.00,   "CNY", 1, ""),
+
+    # (Optional) keep the USD examples if you want
+    # ("Daily Coffee", "Daily", 6.00, "USD", 1, "Default example"),
+    # ("StreamVerse",  "Monthly", 12.99, "USD", 1, ""),
+    # ("MusicFlow",    "Monthly", 9.99,  "USD", 0, ""),
+]
+
+
+def ensure_recurring_table(conn: sqlite3.Connection) -> None:
+    conn.executescript(RECURRING_SCHEMA)
+    cur = conn.execute("SELECT COUNT(*) FROM recurring_costs;")
+    (cnt,) = cur.fetchone()
+    if cnt == 0:
+        conn.executemany(
+            "INSERT INTO recurring_costs(name, cadence, amount, currency, recurring, notes) VALUES (?, ?, ?, ?, ?, ?);",
+            SEED_RECURRING,
+        )
+
+def list_recurring(limit: int = 100) -> Sequence[sqlite3.Row]:
+    with get_connection() as connection:
+        cur = connection.execute(
+            """
+            SELECT id, name, cadence, amount, currency, recurring, COALESCE(notes,'') AS notes
+            FROM recurring_costs
+            ORDER BY id DESC
+            LIMIT ?;
+            """,
+            (limit,),
+        )
+        return cur.fetchall()
+
+def patch_recurring(
+    rc_id: int,
+    *,
+    name: Optional[str] = None,
+    cadence: Optional[str] = None,
+    amount: Optional[float] = None,
+    currency: Optional[str] = None,
+    recurring: Optional[int] = None,
+    notes: Optional[str] = None,
+) -> Dict[str, Any]:
+    fields = []
+    params: List[Any] = []
+    if name is not None:
+        fields.append("name = ?"); params.append(name)
+    if cadence is not None:
+        fields.append("cadence = ?"); params.append(cadence)
+    if amount is not None:
+        fields.append("amount = ?"); params.append(float(amount))
+    if currency is not None:
+        fields.append("currency = ?"); params.append(currency)
+    if recurring is not None:
+        fields.append("recurring = ?"); params.append(int(1 if recurring else 0))
+    if notes is not None:
+        fields.append("notes = ?"); params.append(notes)
+
+    if not fields:
+        return {"updated": 0}
+
+    with get_connection() as connection:
+        q = f"UPDATE recurring_costs SET {', '.join(fields)} WHERE id = ?"
+        params.append(rc_id)
+        cur = connection.execute(q, params)
+        connection.commit()
+        updated = cur.rowcount or 0
+        row = connection.execute(
+            "SELECT id, name, cadence, amount, currency, recurring, COALESCE(notes,'') AS notes FROM recurring_costs WHERE id = ?",
+            (rc_id,),
+        ).fetchone()
+        return {"updated": updated, "item": dict(row) if row else None}
+
+def create_recurring(
+    name: str, cadence: str, amount: float, currency: str = "CNY", recurring: int = 1, notes: str = ""
+) -> Dict[str, Any]:
+    with get_connection() as connection:
+        cur = connection.execute(
+            "INSERT INTO recurring_costs(name, cadence, amount, currency, recurring, notes) VALUES (?, ?, ?, ?, ?, ?)",
+            (name, cadence, float(amount), currency, int(1 if recurring else 0), notes),
+        )
+        connection.commit()
+        new_id = int(cur.lastrowid)
+        row = connection.execute(
+            "SELECT id, name, cadence, amount, currency, recurring, COALESCE(notes,'') AS notes FROM recurring_costs WHERE id = ?",
+            (new_id,),
+        ).fetchone()
+        return dict(row)
+# ============================================================================
+
+
+
 
 def ensure_database(seed: bool = True) -> None:
     """Create the SQLite file and seed basic data for local development."""
@@ -43,6 +156,8 @@ def ensure_database(seed: bool = True) -> None:
                     "INSERT INTO transactions(occurred_on, description, amount) VALUES (?, ?, ?);",
                     SEED_TRANSACTIONS,
                 )
+                
+        ensure_recurring_table(connection)  # <-- add this line before commit
         connection.commit()
 
 
@@ -210,6 +325,30 @@ def compute_insights():
                     "expenses":  float(lm["expenses"] or 0),
                     "net":       float(lm["net"] or 0),
                 }
+                
+        # --- Average monthly expenses (true monthly average) ---
+        avg_month_expense = 0.0
+        months_count = 0
+        if date:
+            row = cur.execute(f"""
+                WITH per AS (
+                SELECT strftime('%Y-%m', DATE({date})) AS ym,
+                        {expense_only_sql} AS exp
+                FROM {tx}
+                ),
+                monthly AS (
+                SELECT ym, SUM(exp) AS month_exp
+                FROM per
+                WHERE ym IS NOT NULL
+                GROUP BY ym
+                )
+                SELECT COUNT(*) AS months, AVG(month_exp) AS avg_month_exp
+                FROM monthly
+            """).fetchone()
+            if row:
+                months_count = int(row["months"] or 0)
+                avg_month_expense = float(row["avg_month_exp"] or 0.0)
+
 
         # Top categories / merchants by spend
         def top_by(col, limit=5):
@@ -258,9 +397,12 @@ def compute_insights():
                 "count": count,
                 "avg_income": round(avg_income,2),
                 "avg_expense": round(avg_expense,2),
+                "avg_monthly_expense": round(avg_month_expense, 2),
+                "months_observed": months_count,
             },
             "latest_month": latest,
             "top_categories": top_categories,
             "top_merchants": top_merchants,
             "biggest_expense_30d": biggest,
         }
+        
