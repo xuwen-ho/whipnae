@@ -2,6 +2,7 @@ import type { QuizStep as QuizStepType, PartialQuizResponse } from '@/lib/quiz/t
 import { QuestionCard } from './QuestionTypes/QuestionCard';
 import { SingleSelect } from './QuestionTypes/SingleSelect';
 import { MultiSelect } from './QuestionTypes/MultiSelect';
+import { TextInput } from './QuestionTypes/TextInput';
 
 type QuizStepProps = {
   step: QuizStepType;
@@ -31,7 +32,14 @@ export function QuizStep({ step, responses, errors, onResponseChange }: QuizStep
               required={question.required}
               error={error}
             >
-              {question.type === 'single-select' ? (
+              {question.type === 'text-input' ? (
+                <TextInput
+                  question={question}
+                  value={value as string}
+                  onChange={(newValue) => onResponseChange(question.id, newValue)}
+                  error={error}
+                />
+              ) : question.type === 'single-select' ? (
                 <SingleSelect
                   options={question.options}
                   value={value as string | undefined}

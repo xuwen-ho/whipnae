@@ -104,8 +104,10 @@ TASK: Generate 3 actionable financial insights that:
 Return ONLY valid JSON in this exact format:
 {
   "insights": ["insight 1", "insight 2", "insight 3"],
-  "personalizationSummary": "1-2 sentence summary explaining how these insights are personalized"
+  "personalizationSummary": "1-2 sentence summary explaining how these insights are personalized to ${body.userName}'s specific profile"
 }
+
+IMPORTANT: In the personalizationSummary, you MUST use "${body.userName}" as the person's name, their exact risk score of ${body.riskScore}/10, and mention their specific characteristics like ${body.characteristics.knowledgeLevel || 'intermediate'} knowledge level.
 
 Keep each insight under 150 characters. Make them actionable and specific.`;
 

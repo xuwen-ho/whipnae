@@ -25,12 +25,26 @@ The dev server runs at `http://localhost:3000`. Tailwind and ESLint are preconfi
 ### Backend Setup
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
-The FastAPI server will default to `http://127.0.0.1:8000`. Replace `.venv` with your preferred environment name if needed.
+The FastAPI server will be available at `http://localhost:8000`.
+
+### Quick Start (Both Servers)
+
+From the project root, start both servers in separate terminals:
+
+**Terminal 1 (Backend):**
+```bash
+cd backend && source venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Terminal 2 (Frontend):**
+```bash
+cd frontend && npm run dev
+```
 
 ### Environment Variables
 - Root-level `.env` (future): shared values such as feature flags or analytics keys.

@@ -24,9 +24,9 @@ const profileNavItems = [
 export default function ProfileSettingsPage() {
   const router = useRouter();
   const [accessibilitySettings, setAccessibilitySettings] = useState<Record<AccessibilitySetting, boolean>>({
-    simpleMode: true,
-    visuallyImpairedMode: true,
-    dyslexiaFriendlyFont: true,
+    simpleMode: false,
+    visuallyImpairedMode: false,
+    dyslexiaFriendlyFont: false,
   });
 
   const [userProfile, setUserProfile] = useState<FinancialProfile | null>(null);
@@ -34,7 +34,7 @@ export default function ProfileSettingsPage() {
   const [personalizationSummary, setPersonalizationSummary] = useState<string>("");
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
 
-  // Load saved profile and insights from localStorage on mount
+  // Load saved profile, insights, and accessibility settings from localStorage on mount
   useEffect(() => {
     const savedProfile = localStorage.getItem('whipnae-user-profile');
     if (savedProfile) {
@@ -57,6 +57,32 @@ export default function ProfileSettingsPage() {
         setPersonalizationSummary(insightsData.personalizationSummary || '');
       } catch (error) {
         console.error('Failed to load insights:', error);
+      }
+    }
+
+    // Load saved accessibility settings
+    const savedSettings = localStorage.getItem('whipnae-accessibility-settings');
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        setAccessibilitySettings(settings);
+
+        // Apply dyslexic font if enabled
+        if (settings.dyslexiaFriendlyFont) {
+          document.body.classList.add('dyslexic-font');
+        }
+
+        // Apply simple mode if enabled
+        if (settings.simpleMode) {
+          document.body.classList.add('simple-mode');
+        }
+
+        // Apply visually impaired mode if enabled
+        if (settings.visuallyImpairedMode) {
+          document.body.classList.add('visually-impaired-mode');
+        }
+      } catch (error) {
+        console.error('Failed to load accessibility settings:', error);
       }
     }
   }, []);
@@ -110,10 +136,47 @@ export default function ProfileSettingsPage() {
   };
 
   const handleToggle = (setting: AccessibilitySetting) => {
-    setAccessibilitySettings((prev) => ({
-      ...prev,
-      [setting]: !prev[setting],
-    }));
+    setAccessibilitySettings((prev) => {
+      const newSettings = {
+        ...prev,
+        [setting]: !prev[setting],
+      };
+
+      // Save to localStorage
+      localStorage.setItem('whipnae-accessibility-settings', JSON.stringify(newSettings));
+
+      // Apply dyslexic font immediately
+      if (setting === 'dyslexiaFriendlyFont') {
+        if (newSettings.dyslexiaFriendlyFont) {
+          document.body.classList.add('dyslexic-font');
+        } else {
+          document.body.classList.remove('dyslexic-font');
+        }
+      }
+
+      // Apply simple mode immediately
+      if (setting === 'simpleMode') {
+        if (newSettings.simpleMode) {
+          document.body.classList.add('simple-mode');
+        } else {
+          document.body.classList.remove('simple-mode');
+        }
+      }
+
+      // Apply visually impaired mode immediately
+      if (setting === 'visuallyImpairedMode') {
+        if (newSettings.visuallyImpairedMode) {
+          document.body.classList.add('visually-impaired-mode');
+        } else {
+          document.body.classList.remove('visually-impaired-mode');
+        }
+      }
+
+      // Dispatch custom event to notify other components
+      window.dispatchEvent(new Event('accessibility-settings-changed'));
+
+      return newSettings;
+    });
   };
 
   const handleStartQuiz = () => {

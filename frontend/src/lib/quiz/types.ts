@@ -41,6 +41,9 @@ export type InvestmentPreference =
  * Complete quiz response structure
  */
 export interface QuizResponse {
+  // Personal Information (required)
+  userName: string;
+
   // Demographics & Life Stage (required)
   ageGroup: AgeGroup;
   financialSituation: FinancialSituation;
@@ -82,6 +85,7 @@ export type RiskTolerance = 'low' | 'moderate' | 'high';
  * Financial profile generated from quiz
  */
 export interface FinancialProfile {
+  userName: string;
   profileType: ProfileType;
   profileName: string;
   profileSummary: string;
@@ -98,7 +102,7 @@ export interface FinancialProfile {
 /**
  * Quiz question types
  */
-export type QuestionType = 'single-select' | 'multi-select';
+export type QuestionType = 'single-select' | 'multi-select' | 'text-input';
 
 export interface QuestionOption {
   value: string;

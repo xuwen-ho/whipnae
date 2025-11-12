@@ -202,6 +202,7 @@ export function calculateFinancialProfile(responses: QuizResponse): FinancialPro
   const metadata = getProfileMetadata(profileType);
 
   return {
+    userName: responses.userName,
     profileType,
     profileName: metadata.name,
     profileSummary: metadata.summary,

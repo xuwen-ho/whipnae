@@ -26,11 +26,27 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
   // Load saved progress from localStorage on mount
   useEffect(() => {
     try {
+      const shouldRestart = sessionStorage.getItem('whipnae-quiz-restart');
       const saved = localStorage.getItem(STORAGE_KEY);
+
+      // Load saved responses if they exist
       if (saved) {
         const parsed = JSON.parse(saved);
         setResponses(parsed.responses || {});
-        setCurrentStepId(parsed.currentStepId || 1);
+
+        // If restart flag is set, always start at step 1 (but keep responses)
+        if (shouldRestart === 'true') {
+          setCurrentStepId(1);
+          sessionStorage.removeItem('whipnae-quiz-restart');
+        } else {
+          setCurrentStepId(parsed.currentStepId || 1);
+        }
+      } else {
+        // No saved data, start fresh at step 1
+        setCurrentStepId(1);
+        if (shouldRestart === 'true') {
+          sessionStorage.removeItem('whipnae-quiz-restart');
+        }
       }
     } catch (error) {
       console.error('Failed to load quiz progress:', error);

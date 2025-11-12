@@ -11,6 +11,14 @@ export const quizSteps: QuizStep[] = [
     description: 'Help us understand your current life stage and financial situation',
     questions: [
       {
+        id: 'userName',
+        type: 'text-input',
+        title: "What's your first name?",
+        description: 'Help us personalize your experience',
+        required: true,
+        options: [],
+      },
+      {
         id: 'ageGroup',
         type: 'single-select',
         title: 'What stage of life are you in?',

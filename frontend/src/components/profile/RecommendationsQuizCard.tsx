@@ -7,9 +7,7 @@ export function RecommendationsQuizCard({ onStart }: RecommendationsQuizCardProp
     <section className="rounded-3xl p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start">
         <div className="flex-1">
-          <span className="inline-flex items-center rounded-full bg-white/15 px-3 py-1 text-xs font-medium uppercase tracking-wide text-white">
-            New
-          </span>
+          
           <h2 className="mt-3 text-lg font-semibold text-white">
             Take our Recommendations Quiz
           </h2>
