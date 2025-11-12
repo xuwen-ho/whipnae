@@ -1,13 +1,158 @@
-# backend/database/create_db.py
-import sqlite3, os, random
+#!/usr/bin/env python3
+from __future__ import annotations
+import sqlite3, random
 from pathlib import Path
+from typing import Optional
 
-BASE_DIR    = Path(__file__).resolve().parent         # backend/database/
+BASE_DIR    = Path(__file__).resolve().parent
 DB_PATH     = BASE_DIR / "transactions.db"
 SCHEMA_PATH = BASE_DIR / "schema.sql"
 
+EMBEDDED_SCHEMA = r"""
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT UNIQUE NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS accounts (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT CHECK(type IN ('checking','savings','credit_card')) NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'CNY',
+  institution TEXT,
+  account_number_mask TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  parent_id INTEGER,
+  FOREIGN KEY (parent_id) REFERENCES categories(id)
+);
+
+CREATE TABLE IF NOT EXISTS merchants (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  normalized_name TEXT NOT NULL,
+  mcc TEXT,
+  category_default_id INTEGER,
+  website TEXT,
+  country TEXT,
+  FOREIGN KEY (category_default_id) REFERENCES categories(id)
+);
+
+CREATE TABLE IF NOT EXISTS recurring_groups (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  merchant_id INTEGER,
+  category_id INTEGER,
+  cadence TEXT NOT NULL,
+  day_of_month INTEGER,
+  weekday INTEGER,
+  next_due_date TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
+  notes TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (merchant_id) REFERENCES merchants(id),
+  FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+  id INTEGER PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  account_id INTEGER NOT NULL,
+  merchant_id INTEGER,
+  category_id INTEGER,
+  type TEXT CHECK(type IN ('debit','credit','transfer')) NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  currency TEXT NOT NULL DEFAULT 'CNY',
+  description TEXT,
+  status TEXT CHECK(status IN ('pending','posted','reversed')) NOT NULL DEFAULT 'posted',
+  created_at TEXT NOT NULL,
+  posted_at TEXT,
+  is_recurring INTEGER NOT NULL DEFAULT 0,
+  recurring_group_id INTEGER,
+  channel TEXT CHECK(channel IN ('card','ach','wire','cash','online','cheque')),
+  latitude REAL,
+  longitude REAL,
+  raw_text TEXT,
+  external_id TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (account_id) REFERENCES accounts(id),
+  FOREIGN KEY (merchant_id) REFERENCES merchants(id),
+  FOREIGN KEY (category_id) REFERENCES categories(id),
+  FOREIGN KEY (recurring_group_id) REFERENCES recurring_groups(id)
+);
+
+CREATE TABLE IF NOT EXISTS transfers (
+  id INTEGER PRIMARY KEY,
+  from_account_id INTEGER NOT NULL,
+  to_account_id INTEGER NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  created_at TEXT NOT NULL,
+  description TEXT,
+  external_id TEXT,
+  FOREIGN KEY (from_account_id) REFERENCES accounts(id),
+  FOREIGN KEY (to_account_id) REFERENCES accounts(id)
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS tx_fts USING fts5(
+  description, raw_text, merchantname, content='transactions', content_rowid='id'
+);
+
+CREATE TRIGGER IF NOT EXISTS tx_ai AFTER INSERT ON transactions BEGIN
+  INSERT INTO tx_fts(rowid, description, raw_text, merchantname)
+  SELECT new.id, new.description, new.raw_text,
+         COALESCE((SELECT name FROM merchants WHERE id=new.merchant_id),'');
+END;
+
+CREATE TRIGGER IF NOT EXISTS tx_ad AFTER DELETE ON transactions BEGIN
+  INSERT INTO tx_fts(tx_fts, rowid, description, raw_text, merchantname)
+  VALUES('delete', old.id, '', '', '');
+END;
+
+CREATE TRIGGER IF NOT EXISTS tx_au AFTER UPDATE ON transactions BEGIN
+  INSERT INTO tx_fts(tx_fts, rowid, description, raw_text, merchantname)
+  VALUES('delete', old.id, '', '', '');
+  INSERT INTO tx_fts(rowid, description, raw_text, merchantname)
+  SELECT new.id, new.description, new.raw_text,
+         COALESCE((SELECT name FROM merchants WHERE id=new.merchant_id),'');
+END;
+
+CREATE VIEW IF NOT EXISTS v_monthly_spend AS
+SELECT user_id,
+       strftime('%Y-%m', posted_at) AS year_month,
+       SUM(CASE WHEN type='debit'  THEN amount_cents ELSE 0 END)/100.0 AS spend_cny,
+       SUM(CASE WHEN type='credit' THEN amount_cents ELSE 0 END)/100.0 AS income_cny
+FROM transactions
+WHERE status='posted'
+GROUP BY 1,2;
+
+CREATE VIEW IF NOT EXISTS v_recurring AS
+SELECT t.*, rg.name AS recurring_name
+FROM transactions t
+LEFT JOIN recurring_groups rg ON rg.id = t.recurring_group_id
+WHERE t.is_recurring=1;
+"""
+
+def _load_schema_sql() -> str:
+    return SCHEMA_PATH.read_text(encoding="utf-8") if SCHEMA_PATH.exists() else EMBEDDED_SCHEMA
+
+def _assert_users_exists(cur: sqlite3.Cursor):
+    ok = cur.execute("SELECT 1 FROM sqlite_schema WHERE type='table' AND name='users'").fetchone()
+    if not ok:
+        raise RuntimeError(f"'users' table missing after schema exec. Tried schema: {SCHEMA_PATH}")
+
 def main():
-    # 1) recreate DB file
+    # fresh DB
     if DB_PATH.exists():
         DB_PATH.unlink()
 
@@ -15,11 +160,12 @@ def main():
     conn.execute("PRAGMA foreign_keys = ON;")
     cur = conn.cursor()
 
-    # 2) load schema (AFTER conn/cursor exist)
-    with open(SCHEMA_PATH, "r", encoding="utf-8") as f:
-        cur.executescript(f.read())
+    # schema
+    ddl = _load_schema_sql()
+    cur.executescript(ddl)
+    _assert_users_exists(cur)
 
-    # 3) seed data (Shenzhen / CNY)
+    # seed user/accounts/categories
     cur.execute("INSERT INTO users(name,email) VALUES ('Li Wei','li.wei@example.com')")
 
     cur.executescript("""
@@ -30,8 +176,10 @@ def main():
 
     INSERT INTO categories(name,parent_id) VALUES
       ('Income',NULL), ('Salary',1), ('Investments',1),
-      ('Expenses',NULL), ('Groceries',4), ('Transport',4), ('Dining',4), ('Food Delivery',4),
-      ('Subscriptions',4), ('Utilities',4), ('Shopping',4), ('Travel',4), ('Health',4), ('Rent',4), ('Fees',4);
+      ('Expenses',NULL),
+      ('Groceries',4), ('Transport',4), ('Dining',4), ('Food Delivery',4),
+      ('Subscriptions',4), ('Utilities',4), ('Shopping',4), ('Travel',4),
+      ('Health',4), ('Rent',4), ('Fees',4);
     """)
 
     merchants = [
@@ -59,7 +207,7 @@ def main():
         cur.execute("""INSERT INTO merchants(name,normalized_name,mcc,category_default_id,website,country)
                        VALUES (?,?,?,?,?,?)""", m)
 
-    def cat(name): 
+    def cat(name: str) -> int:
         return cur.execute("SELECT id FROM categories WHERE name=?", (name,)).fetchone()[0]
 
     rec_defs = [
@@ -77,15 +225,21 @@ def main():
                        VALUES (1,?,?,?,?,?,1,?)""",
                     (name, mid, cat(catname), 'monthly', day, f"2025-12-{day:02d}"))
 
-    def rg(name):
+    def rg(name: Optional[str]):
+        if not name:
+            return None
         r = cur.execute("SELECT id FROM recurring_groups WHERE name=?", (name,)).fetchone()
         return r[0] if r else None
 
-    def add_tx(account_name, merchant_norm, category_name, typ, amount_cny, y, m, d,
-               desc, is_rec=False, rec_group=None, channel='card'):
-        acc_id  = cur.execute("SELECT id FROM accounts  WHERE name=?", (account_name,)).fetchone()[0]
-        merch_id= cur.execute("SELECT id FROM merchants WHERE normalized_name=?", (merchant_norm,)).fetchone()[0]
-        cents   = int(round(float(amount_cny) * 100))
+    # Inserter — merchant can be None for payroll credits
+    def add_tx(account_name: str, merchant_norm: Optional[str], category_name: str, typ: str,
+               amount_cny: float, y: int, m: int, d: int, desc: str,
+               is_rec: bool = False, rec_group: Optional[str] = None, channel: str = 'card'):
+        acc_id   = cur.execute("SELECT id FROM accounts WHERE name=?", (account_name,)).fetchone()[0]
+        merch_id = None
+        if merchant_norm:
+            merch_id = cur.execute("SELECT id FROM merchants WHERE normalized_name=?", (merchant_norm,)).fetchone()[0]
+        cents = int(round(float(amount_cny) * 100))
         ts = f"{y:04d}-{m:02d}-{d:02d} 10:00:00"
         cur.execute("""INSERT INTO transactions(
             user_id, account_id, merchant_id, category_id, type, amount_cents, currency,
@@ -93,15 +247,18 @@ def main():
             channel, raw_text
         ) VALUES (1,?,?,?,?,?,'CNY',?,'posted',?,?,?, ?, ?, ?)""",
             (acc_id, merch_id, cat(category_name), typ, cents,
-             desc, ts, ts, 1 if is_rec else 0, rg(rec_group) if rec_group else None,
-             channel, f"{merchant_norm.upper()} {desc}"))
+             desc, ts, ts, 1 if is_rec else 0, rg(rec_group),
+             channel, f"{(merchant_norm or 'PAYROLL').upper()} {desc}"))
 
-    months = [6,7,8,9,10,11]
+    # Months to generate
+    months = [6,7,8,9,10,11]  # 2025-06 .. 2025-11
+
+    # Expenses & day-to-day
     for mm in months:
         add_tx('ICBC Debit','vanke_landlord','Rent','debit', 3500.00, 2025, mm, 5,  '房租 - 南山区一居', True, '房租 Rent - Vanke','ach')
         add_tx('ICBC Debit','state_grid_gd','Utilities','debit', 160.00 + random.uniform(-15,15), 2025, mm,10, '电费', True, '电费 State Grid GD','ach')
         add_tx('ICBC Debit','sz_water','Utilities','debit',       45.00 + random.uniform(-5,5),   2025, mm,15, '水费', True, '水费 Shenzhen Water','ach')
-        add_tx('ICBC Debit','sz_gas','Utilities','debit',         60.00 + random.uniform(-8,8),   2025, mm,20, '燃气费', True, '燃气 Shenzhen Gas','ach')
+        add_tx('ICBC Debit','sz_gas','Utilities','debit',         60.00 + random.uniform(-8,8),   2025, mm,20, '燃气费', True, '燃气 深圳 Gas','ach')
         add_tx('ICBC Debit','cmcc_gd','Utilities','debit',        68.00,                          2025, mm,18, '中国移动广东 5G套餐', True, '手机话费 China Mobile GD','ach')
         add_tx('UnionPay Credit','tencent_video','Subscriptions','debit', 20.00, 2025, mm, 8, '腾讯视频VIP月费', True, '腾讯视频 VIP','card')
         add_tx('UnionPay Credit','iqiyi','Subscriptions','debit',         19.00, 2025, mm,12, '爱奇艺VIP月费', True, '爱奇艺 VIP','card')
@@ -113,13 +270,25 @@ def main():
         add_tx('UnionPay Credit','hema','Groceries','debit',         120.40, 2025, mm, 20, '盒马 生鲜采购', False, None,'card')
         add_tx('UnionPay Credit','pdd','Shopping','debit',            89.00, 2025, mm, 22, '拼多多 家居小件', False, None,'online')
 
+    # 11.11 promos
     add_tx('UnionPay Credit','taobao','Shopping','debit',  799.00,  2025, 11, 11, '双11 小米手环套装', False, None,'online')
     add_tx('UnionPay Credit','jd','Shopping','debit',     1299.00,  2025, 11, 11, '双11 小米空气炸锅', False, None,'online')
     add_tx('UnionPay Credit','sf_express','Fees','debit',   12.00,  2025, 11, 12, '顺丰 运费', False, None,'online')
 
+    # Income credits (Salary) — 12,000 CNY on the 28th
+    for mm in months:
+        add_tx('ICBC Debit', None, 'Salary', 'credit', 12000.00, 2025, mm, 28,
+               '工资入账 - 腾讯', True, None, 'ach')
+
+    # finalize
     conn.commit()
+    tx_count  = cur.execute("SELECT COUNT(*) FROM transactions").fetchone()[0]
+    income_ct = cur.execute("SELECT COUNT(*) FROM transactions WHERE type='credit'").fetchone()[0]
+    spend_ct  = cur.execute("SELECT COUNT(*) FROM transactions WHERE type='debit'").fetchone()[0]
+    print(f"transactions.db (Shenzhen/CNY) built ✅ at {DB_PATH}")
+    print(f"  rows: {tx_count}  (debits: {spend_ct}, credits: {income_ct})")
+
     conn.close()
-    print("transactions.db (Shenzhen/CNY) built ✅ at", DB_PATH)
 
 if __name__ == "__main__":
     main()
