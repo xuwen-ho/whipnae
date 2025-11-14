@@ -14,7 +14,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: openrouter.chat('moonshotai/kimi-k2'),
-    system: 'You are a helpful assistant.',
+    system: 'You are a helpful financial assistant.',
     messages: convertToModelMessages(messages),
   });
 

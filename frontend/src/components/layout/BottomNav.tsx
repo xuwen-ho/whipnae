@@ -9,7 +9,6 @@ type NavItem = {
   link: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  isActive?: boolean;
 };
 
 type BottomNavProps = {
@@ -17,17 +16,19 @@ type BottomNavProps = {
 };
 
 const defaultItems: NavItem[] = [
-  { id: "home", link: "/", label: "Home", icon: FiHome, isActive: true },
+  { id: "home", link: "/", label: "Home", icon: FiHome },
   { id: "chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
   { id: "profile", link: "/profile", label: "Profile", icon: FiUser },
 ];
 
 export function BottomNav({ items = defaultItems }: BottomNavProps) {
+  const pathname = usePathname();
 
   return (
     <nav className="sticky bottom-0 z-30 border-t border-slate-200 bg-white">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-around px-6 py-3 text-sm font-medium">
-        {items.map(({ id, link, label, icon: Icon, isActive }) => {
+        {items.map(({ id, link, label, icon: Icon }) => {
+          const isActive = pathname === link;
           return (
             <Link
               key={id}
