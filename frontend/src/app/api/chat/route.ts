@@ -7,7 +7,7 @@ export const maxDuration = 30;
 
 // Create OpenRouter provider instance
 const openrouter = createOpenRouter({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENROUTER_API_KEY,
 });
 
 export async function POST(req: Request) {

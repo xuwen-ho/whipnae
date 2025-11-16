@@ -49,4 +49,4 @@ cd frontend && npm run dev
 ### Environment Variables
 - Root-level `.env` (future): shared values such as feature flags or analytics keys.
 - `frontend/.env.local`: public-safe keys or API URLs used by the Next.js client.
-- `backend/.env`: private credentials (e.g., `OPENAI_API_KEY`, database URLs). Supply a matching `.env.example` once the schema is finalized.
+- `backend/.env`: private credentials (e.g., `OPENROUTER_API_KEY`, database URLs). Supply a matching `.env.example` once the schema is finalized.
