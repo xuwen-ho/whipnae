@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FiVolume2, FiSquare } from "react-icons/fi";
+import { FiVolume2, FiSquare, FiFileText } from "react-icons/fi";
 
 export function TextToSpeech() {
   const [isVisible, setIsVisible] = useState(false);
@@ -88,16 +88,120 @@ export function TextToSpeech() {
     setIsVisible(false);
   };
 
+  const handleReadPage = () => {
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+
+    let pageText = "";
+
+    // Helper function to get text from an element, excluding navigation
+    const getTextFromElement = (element: Element): string => {
+      let text = "";
+
+      // Create a clone to avoid modifying the original
+      const clone = element.cloneNode(true) as Element;
+
+      // Remove all nav elements from the clone
+      const navElements = clone.querySelectorAll("nav");
+      navElements.forEach((nav) => nav.remove());
+
+      // Get the text content
+      text = clone.textContent || "";
+
+      return text.trim();
+    };
+
+    // First, read header content
+    const header = document.querySelector("header");
+    if (header) {
+      const headerText = getTextFromElement(header);
+      if (headerText) {
+        pageText += headerText + ". ";
+      }
+    }
+
+    // Then, read main content
+    const mainContent = document.querySelector("main");
+    if (mainContent) {
+      const mainText = getTextFromElement(mainContent);
+      if (mainText) {
+        pageText += mainText + ". ";
+      }
+    }
+
+    // Clean up the text
+    // Replace multiple spaces/newlines with single space
+    pageText = pageText.replace(/\s+/g, " ");
+
+    // Remove duplicate consecutive sentences
+    const sentences = pageText.split(". ").map(s => s.trim()).filter(s => s.length > 0);
+    const uniqueSentences: string[] = [];
+    sentences.forEach((sentence) => {
+      if (uniqueSentences.length === 0 || uniqueSentences[uniqueSentences.length - 1] !== sentence) {
+        uniqueSentences.push(sentence);
+      }
+    });
+    pageText = uniqueSentences.join(". ");
+
+    // Normalize text for better speech
+    const textToSpeak = normalizeTextForSpeech(pageText);
+
+    // Wait for voices to load before speaking
+    const speak = () => {
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+
+      // Get available voices and select the best one
+      const voices = window.speechSynthesis.getVoices();
+
+      // Prefer high-quality English voices
+      const preferredVoice = voices.find(
+        (voice) => voice.lang.startsWith("en") && (voice.name.includes("Google") || voice.name.includes("Enhanced") || voice.localService === false)
+      ) || voices.find((voice) => voice.lang.startsWith("en"));
+
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+
+      utterance.rate = 1.0; // Normal speed
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      utterance.lang = "en-US";
+
+      // Speak
+      window.speechSynthesis.speak(utterance);
+      setIsSpeaking(true);
+    };
+
+    // Check if voices are already loaded
+    if (window.speechSynthesis.getVoices().length > 0) {
+      speak();
+    } else {
+      // Wait for voices to load
+      window.speechSynthesis.onvoiceschanged = () => {
+        speak();
+      };
+    }
+  };
+
   const handleStop = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
 
-  if (!isVisible && !isSpeaking) return null;
-
   return (
     <>
-      {/* Floating "Speak" button */}
+      {/* Persistent "Read Page" button - always visible when visually impaired mode is on */}
+      {!isSpeaking && (
+        <button
+          onClick={handleReadPage}
+          className="fixed bottom-8 left-8 z-50 flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700"
+        >
+          <FiFileText className="h-5 w-5" />
+          Read Page Aloud
+        </button>
+      )}
+
+      {/* Floating "Speak" button for selected text */}
       {isVisible && !isSpeaking && (
         <button
           onClick={handleSpeak}
