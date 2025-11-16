@@ -4,14 +4,70 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useState } from 'react';
 import { BottomNav } from '@/components/layout/BottomNav';
+import ReactMarkdown from 'react-markdown';
+
+// Collapsible Tool Call Component
+function ToolCallDisplay({ part, index }: { part: any; index: number }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Extract tool name from type (e.g., "tool-getSpendingByCategory" -> "getSpendingByCategory")
+  const toolName = part.type.replace('tool-', '');
+  
+  return (
+    <div className="mb-2 overflow-hidden rounded border border-blue-300 bg-blue-50">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex w-full items-center justify-between p-2 text-left hover:bg-blue-100 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className="text-blue-700">🔧</span>
+          <span className="font-semibold text-blue-700 text-xs">
+            Tool: {toolName}
+          </span>
+        </div>
+        <span className="text-blue-500 text-xs">
+          {isExpanded ? '▼' : '▶'}
+        </span>
+      </button>
+      {isExpanded && (
+        <div className="border-t border-blue-200 p-2">
+          <pre className="max-h-64 overflow-auto text-blue-600 text-xs whitespace-pre-wrap">
+            {JSON.stringify(part, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function Page() {
+  const [input, setInput] = useState('');
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
     }),
+    onToolCall: async ({ toolCall }) => {
+      console.log('🔧 [FRONTEND] Tool call detected:', toolCall);
+      // The SDK automatically executes tools and adds results to the conversation
+      return undefined;
+    },
+    onFinish: (result) => {
+      console.log('🏁 [FRONTEND] Chat finished:', result);
+      console.log('🏁 [FRONTEND] Finish reason:', result.finishReason);
+      
+      // If the model stopped after calling tools, we need to continue the conversation
+      // by sending the tool results back to get a final response
+      if (result.finishReason === 'tool-calls') {
+        console.log('⚠️ [FRONTEND] Model stopped after tool calls - continuing conversation...');
+        // The tool results are already in the messages array
+        // We need to send an empty message to trigger the model to process tool results
+        setTimeout(() => {
+          console.log('🔄 [FRONTEND] Sending continuation request...');
+          sendMessage({ text: '' }); // Send empty message to continue
+        }, 100);
+      }
+    },
   });
-  const [input, setInput] = useState('');
 
   return (
     <div className="flex min-h-screen flex-col bg-slate-100 text-slate-900">
@@ -44,7 +100,18 @@ export default function Page() {
                 </div>
               </div>
             ) : (
-              messages.map(message => (
+              messages
+                .filter(message => {
+                  // Filter out empty user messages (used for continuation)
+                  if (message.role === 'user') {
+                    const hasContent = message.parts.some(
+                      part => part.type === 'text' && part.text.trim() !== ''
+                    );
+                    return hasContent;
+                  }
+                  return true;
+                })
+                .map(message => (
                 <div
                   key={message.id}
                   className={`flex ${
@@ -61,13 +128,34 @@ export default function Page() {
                     <div className="mb-1 text-xs font-semibold opacity-70">
                       {message.role === 'user' ? 'You' : 'AI Assistant'}
                     </div>
-                    {message.parts.map((part, index) =>
-                      part.type === 'text' ? (
-                        <p key={index} className="whitespace-pre-wrap text-sm">
-                          {part.text}
-                        </p>
-                      ) : null
-                    )}
+                    {message.parts.map((part, index) => {
+                      if (part.type === 'text') {
+                        return (
+                          <div key={index} className="prose prose-sm max-w-none text-sm">
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }: any) => <p className="mb-2 last:mb-0">{children}</p>,
+                                strong: ({ children }: any) => <strong className="font-bold">{children}</strong>,
+                                em: ({ children }: any) => <em className="italic">{children}</em>,
+                                ul: ({ children }: any) => <ul className="list-disc list-inside mb-2">{children}</ul>,
+                                ol: ({ children }: any) => <ol className="list-decimal list-inside mb-2">{children}</ol>,
+                                li: ({ children }: any) => <li className="mb-1">{children}</li>,
+                                code: ({ children }: any) => (
+                                  <code className="bg-slate-700 bg-opacity-20 px-1 py-0.5 rounded text-xs">
+                                    {children}
+                                  </code>
+                                ),
+                              }}
+                            >
+                              {part.text}
+                            </ReactMarkdown>
+                          </div>
+                        );
+                      } else if (part.type.startsWith('tool-')) {
+                        return <ToolCallDisplay key={index} part={part} index={index} />;
+                      }
+                      return null;
+                    })}
                   </div>
                 </div>
               ))
