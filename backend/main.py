@@ -96,8 +96,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-from agents.orchestrator import select_agent
-from services.llm_service import LLMService
+# from services.llm_service import LLMService
 from database.database import fetch_transactions, compute_insights  # NEW
 from database.database import list_recurring, patch_recurring, create_recurring
 
@@ -167,21 +166,6 @@ class ProfileInsightsRequest(BaseModel):
 class ProfileInsightsResponse(BaseModel):
     insights: list[str] = Field(..., description="3 personalized AI-generated insights")
     personalizationSummary: str = Field(..., description="How AI personalizes for this user")
-
-
-@app.post("/chat", response_model=ChatResponse)
-async def chat_endpoint(payload: ChatRequest) -> ChatResponse:
-    agent = select_agent(intent="financial")
-    if agent is None:
-        raise HTTPException(status_code=503, detail="No agent available to process the request.")
-
-    try:
-        reply = await agent.handle_message(payload.message)
-    except NotImplementedError as exc:
-        raise HTTPException(status_code=501, detail="Agent capability not implemented yet.") from exc
-
-    return ChatResponse(reply=reply, source=getattr(agent, "name", None))
-
 
 @app.post("/profile/insights", response_model=ProfileInsightsResponse)
 async def generate_profile_insights(payload: ProfileInsightsRequest) -> ProfileInsightsResponse:
