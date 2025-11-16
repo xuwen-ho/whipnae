@@ -28,81 +28,81 @@ export default function Page() {
       </header>
 
       {/* Main Chat Area */}
-      <main className="relative z-10 flex-1 bg-gray-100">
-        <div className="mx-auto h-full max-w-3xl px-6 py-6">
-          <div className="flex h-full flex-col">
-            {/* Messages Container */}
-            <div className="mb-6 flex-1 space-y-4 overflow-y-auto rounded-lg bg-white p-6 shadow-sm">
-              {messages.length === 0 ? (
-                <div className="flex h-full items-center justify-center text-center">
-                  <div className="space-y-2">
-                    <p className="text-lg font-semibold text-slate-700">
-                      Welcome to your AI Financial Assistant
-                    </p>
-                    <p className="text-sm text-slate-500">
-                      Ask me anything about your finances, budgeting, or financial planning.
-                    </p>
-                  </div>
+      <main className="relative z-10 flex-1 overflow-hidden bg-gray-100">
+        {/* Messages Container - Scrollable */}
+        <div className="mx-auto h-full max-w-3xl overflow-y-auto px-6 py-6 pb-32">
+          <div className="space-y-4 rounded-lg bg-white p-6 shadow-sm">
+            {messages.length === 0 ? (
+              <div className="flex min-h-[400px] items-center justify-center text-center">
+                <div className="space-y-2">
+                  <p className="text-lg font-semibold text-slate-700">
+                    Welcome to your AI Financial Assistant
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Ask me anything about your finances, budgeting, or financial planning.
+                  </p>
                 </div>
-              ) : (
-                messages.map(message => (
+              </div>
+            ) : (
+              messages.map(message => (
+                <div
+                  key={message.id}
+                  className={`flex ${
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  }`}
+                >
                   <div
-                    key={message.id}
-                    className={`flex ${
-                      message.role === 'user' ? 'justify-end' : 'justify-start'
+                    className={`max-w-[80%] rounded-lg px-4 py-3 ${
+                      message.role === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-200 text-slate-900'
                     }`}
                   >
-                    <div
-                      className={`max-w-[80%] rounded-lg px-4 py-3 ${
-                        message.role === 'user'
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-200 text-slate-900'
-                      }`}
-                    >
-                      <div className="mb-1 text-xs font-semibold opacity-70">
-                        {message.role === 'user' ? 'You' : 'AI Assistant'}
-                      </div>
-                      {message.parts.map((part, index) =>
-                        part.type === 'text' ? (
-                          <p key={index} className="whitespace-pre-wrap text-sm">
-                            {part.text}
-                          </p>
-                        ) : null
-                      )}
+                    <div className="mb-1 text-xs font-semibold opacity-70">
+                      {message.role === 'user' ? 'You' : 'AI Assistant'}
                     </div>
+                    {message.parts.map((part, index) =>
+                      part.type === 'text' ? (
+                        <p key={index} className="whitespace-pre-wrap text-sm">
+                          {part.text}
+                        </p>
+                      ) : null
+                    )}
                   </div>
-                ))
-              )}
-            </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
-            {/* Input Form */}
-            <div className="rounded-lg bg-white p-4 shadow-sm">
-              <form
-                onSubmit={e => {
-                  e.preventDefault();
-                  if (input.trim()) {
-                    sendMessage({ text: input });
-                    setInput('');
-                  }
-                }}
-                className="flex gap-2"
+        {/* Input Form - Fixed at Bottom */}
+        <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-slate-200 bg-white pb-16">
+          <div className="mx-auto max-w-3xl px-6 py-4">
+            <form
+              onSubmit={e => {
+                e.preventDefault();
+                if (input.trim()) {
+                  sendMessage({ text: input });
+                  setInput('');
+                }
+              }}
+              className="flex gap-2"
+            >
+              <input
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                disabled={status !== 'ready'}
+                placeholder="Ask about your finances..."
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+              />
+              <button
+                type="submit"
+                disabled={status !== 'ready' || !input.trim()}
+                className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500"
               >
-                <input
-                  value={input}
-                  onChange={e => setInput(e.target.value)}
-                  disabled={status !== 'ready'}
-                  placeholder="Ask about your finances..."
-                  className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
-                />
-                <button
-                  type="submit"
-                  disabled={status !== 'ready' || !input.trim()}
-                  className="rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500"
-                >
-                  Send
-                </button>
-              </form>
-            </div>
+                Send
+              </button>
+            </form>
           </div>
         </div>
       </main>
