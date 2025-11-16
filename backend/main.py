@@ -99,9 +99,24 @@ from pydantic import BaseModel, Field
 from agents.orchestrator import select_agent
 from services.llm_service import LLMService
 from database.database import fetch_transactions, compute_insights  # NEW
-from database.database import list_recurring, patch_recurring, create_recurring
+from database.database import list_recurring, patch_recurring, create_recurring, ensure_database
 
 app = FastAPI()
+
+
+# --- Data Models ---
+class ChatRequest(BaseModel):
+    message: str = Field(..., min_length=1, description="User prompt or question.")
+
+class ChatResponse(BaseModel):
+    reply: str
+
+# --- Initialize database on startup ---
+@app.on_event("startup")
+def startup_event():
+    ensure_database(seed=True)
+
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
