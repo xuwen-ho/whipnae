@@ -23,13 +23,13 @@ export function SettingsToggleItem({
         role="switch"
         aria-checked={isOn}
         onClick={onToggle}
-        className={`relative flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${
-          isOn ? "bg-blue-600" : "bg-slate-300"
+        className={`accessibility-toggle relative flex h-8 w-16 flex-shrink-0 items-center rounded-full border-2 transition-colors duration-200 ${
+          isOn ? "bg-blue-600 border-blue-600" : "bg-white border-slate-300"
         }`}
       >
         <span
-          className={`absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
-            isOn ? "translate-x-5" : "translate-x-0"
+          className={`absolute left-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-200 ${
+            isOn ? "translate-x-8" : "translate-x-0"
           }`}
         />
       </button>
