@@ -1,6 +1,5 @@
 "use client";
 
-import { FinancialToolsCard } from "@/components/home/FinancialToolsCard";
 import { FreedomTrackerCard } from "@/components/home/FreedomTrackerCard";
 import { HomeHeader } from "@/components/home/HomeHeader";
 import { InsightsRail } from "@/components/home/InsightsRail";
@@ -130,7 +129,7 @@ export default function Home() {
           <div className="space-y-6">
             <RecurringCostTrackerCard />
             <FreedomTrackerCard months={freedomMonths} />
-            <FinancialToolsCard />
+            {/* <FinancialToolsCard /> */}
           </div>
         </section>
       </main>
