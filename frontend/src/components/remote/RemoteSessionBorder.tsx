@@ -13,8 +13,8 @@ export function RemoteSessionBorder({
   remoteUserName,
   onEndSession,
 }: RemoteSessionBorderProps) {
-  const borderColor = isController ? "border-green-500" : "border-red-500";
   const bgColor = isController ? "bg-green-500" : "bg-red-500";
+  const bgColorHover = isController ? "hover:bg-green-600" : "hover:bg-red-600";
   const statusText = isController ? "Controlling" : "Being Controlled";
   const Icon = isController ? FiNavigation : FiEye;
 
@@ -26,8 +26,8 @@ export function RemoteSessionBorder({
       <div className={`fixed inset-y-0 left-0 z-[100] w-1 ${bgColor}`} />
       <div className={`fixed inset-y-0 right-0 z-[100] w-1 ${bgColor}`} />
 
-      {/* Status bar at bottom */}
-      <div className={`fixed inset-x-0 bottom-1 z-[100] flex justify-center px-4 pb-safe`}>
+      {/* Status bar at top */}
+      <div className={`fixed inset-x-0 top-3 z-[100] flex justify-center px-4`}>
         <div className={`flex items-center gap-3 rounded-full ${bgColor} px-4 py-2 shadow-lg`}>
           <Icon className="h-4 w-4 text-white" />
           <div className="flex items-center gap-2">
@@ -37,14 +37,18 @@ export function RemoteSessionBorder({
               <span className="text-xs font-semibold text-white">{remoteUserName}</span>
             </div>
           </div>
-          <button
-            onClick={onEndSession}
-            className="ml-2 flex h-6 w-6 items-center justify-center rounded-full bg-white/20 transition hover:bg-white/30"
-            aria-label="End session"
-          >
-            <FiX className="h-4 w-4 text-white" />
-          </button>
         </div>
+      </div>
+
+      {/* End Session button at bottom right */}
+      <div className="fixed bottom-20 right-4 z-[100]">
+        <button
+          onClick={onEndSession}
+          className={`flex items-center gap-2 rounded-full ${bgColor} ${bgColorHover} px-4 py-3 shadow-lg transition`}
+        >
+          <FiX className="h-5 w-5 text-white" />
+          <span className="text-sm font-semibold text-white">End Session</span>
+        </button>
       </div>
     </>
   );
