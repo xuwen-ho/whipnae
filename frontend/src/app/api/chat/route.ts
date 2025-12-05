@@ -1,6 +1,6 @@
 import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { streamText, convertToModelMessages, UIMessage } from 'ai';
-import { financialTools } from '@/lib/ai/tools';
+import { financialTools, uiTools } from '@/lib/ai/tools';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -14,7 +14,7 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   console.log('📨 [CHAT API] Request received with', messages.length, 'messages');
-  console.log('🔨 [CHAT API] Available tools:', Object.keys(financialTools));
+  console.log('🔨 [CHAT API] Available tools:', [...Object.keys(financialTools), ...Object.keys(uiTools)]);
   console.log('💬 [CHAT API] Last message:', messages[messages.length - 1]);
 
   const result = streamText({
@@ -69,6 +69,11 @@ You can help users:
 - Track monthly spending over time
 - Manage recurring payments and subscriptions
 - Search for specific transactions or merchants
+- Navigate the app by highlighting UI elements (use highlightUIElement tool)
+
+UI GUIDANCE:
+When users ask how to do something in the app (like "how do I start a remote connection?" or "where is the remote assistance?"), use the highlightUIElement tool to visually guide them. Available elements to highlight:
+- "remote-connection": The Remote Assistance card/button on the Profile page
 
 RESPONSE GUIDELINES:
 1. Always format currency as ¥1,234.56 (CNY)
@@ -87,6 +92,7 @@ RESPONSE GUIDELINES:
       getMonthlySpending: financialTools.getMonthlySpending,
       getRecurringTransactions: financialTools.getRecurringTransactions,
       searchTransactions: financialTools.searchTransactions,
+      highlightUIElement: uiTools.highlightUIElement,
     },
   });
 
