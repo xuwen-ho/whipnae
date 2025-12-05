@@ -15,6 +15,22 @@ const DEFAULT_USER_ID = 1;
 
 console.log('📦 [TOOLS] Financial tools module loaded');
 
+// UI interaction tools (executed on frontend only)
+export const uiTools = {
+  highlightUIElement: {
+    description: 'Highlight a UI element to help the user locate it. Use this when the user asks how to do something in the app, like starting a remote connection. The element will flash/pulse to draw attention.',
+    inputSchema: z.object({
+      elementId: z.enum(['remote-connection']).describe('The ID of the UI element to highlight'),
+      message: z.string().optional().describe('Optional message to explain what the element does'),
+    }),
+    // Note: This tool is executed on the frontend via onToolCall, not here
+    execute: async ({ elementId, message }: { elementId: string; message?: string }) => {
+      console.log('🎯 [TOOL CALLED] highlightUIElement', { elementId, message });
+      return { success: true, elementId, message: message || `Highlighting ${elementId}` };
+    },
+  },
+};
+
 export const financialTools = {
   getSpendingByCategory: {
     description: 'Get total spending for a specific category over a time period. Use this when user asks about spending in a particular category like "food", "transport", "entertainment", etc.',

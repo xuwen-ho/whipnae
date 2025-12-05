@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { FiHome, FiUser } from "react-icons/fi";
 import Link from "next/link";
 
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -213,7 +214,7 @@ export default function ProfileSettingsPage() {
                     profileName={userProfile.riskCategory}
                     profileSummary={`${userProfile.expertiseLevel} investor with ${userProfile.timeHorizon || 'medium'}-term horizon`}
                     riskScore={userProfile.riskScore}
-                    knowledgeLevel={userProfile.expertiseLevel}
+                    knowledgeLevel={userProfile.expertiseLevel ?? "Unknown"}
                     aiInsights={aiInsights}
                     personalizationSummary={personalizationSummary}
                     isLoadingInsights={isLoadingInsights}

@@ -190,11 +190,11 @@ export function TextToSpeech() {
 
   return (
     <>
-      {/* Persistent "Read Page" button - always visible when visually impaired mode is on */}
+      {/* Persistent "Read Page" button - positioned above bottom nav */}
       {!isSpeaking && (
         <button
           onClick={handleReadPage}
-          className="fixed bottom-8 left-8 z-50 flex items-center gap-2 rounded-full bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700"
+          className="fixed bottom-20 left-4 z-40 flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700"
         >
           <FiFileText className="h-5 w-5" />
           Read Page Aloud
