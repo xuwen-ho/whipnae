@@ -22,7 +22,6 @@ const defaultItems: NavItem[] = [
   { id: "home", link: "/", label: "Home", icon: FiHome },
   { id: "invest", link: "/invest", label: "Invest", icon: FiTrendingUp },
   { id: "stocks", link: "/stocks", label: "Stocks", icon: FiBarChart2, requiresAdvanced: true },
-  { id: "chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
   { id: "profile", link: "/profile", label: "Profile", icon: FiUser },
 ];
 
