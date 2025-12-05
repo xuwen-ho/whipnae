@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-<<<<<<< HEAD
-import { FiHome, FiUser } from "react-icons/fi";
-=======
-import { FiHome, FiMessageCircle, FiUser, FiTrendingUp, FiBarChart2 } from "react-icons/fi";
->>>>>>> main
+import { FiHome, FiUser, FiTrendingUp, FiBarChart2 } from "react-icons/fi";
 
 type NavItem = {
   id: string;
