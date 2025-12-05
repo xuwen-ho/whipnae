@@ -3,6 +3,7 @@ import { bundles } from '@/lib/bundles';
 import { notFound } from 'next/navigation';
 import { BottomNav } from '@/components/layout/BottomNav';
 import StockCard from '@/components/stocks/StockCard';
+import { AssetCard } from '@/components/invest/AssetCard';
 import { getMockHolding } from '@/lib/mockHoldings';
 
 type SearchParams = { [key: string]: string | string[] | undefined };
@@ -97,33 +98,24 @@ export default async function BundlePage({
             </section>
           )}
 
-          {/* Assets table */}
+          {/* Assets cards */}
           {(bundle as any).assets && (
             <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-3">Assets Included (Price & Target Allocation)</h2>
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left">
-                  <thead className="bg-gray-50 text-gray-600 text-sm">
-                    <tr>
-                      <th className="px-4 py-2">Symbol</th>
-                      <th className="px-4 py-2">Name</th>
-                      <th className="px-4 py-2">Price</th>
-                      <th className="px-4 py-2">Target</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-gray-800">
-                    {(bundle as any).assets.map((a: any) => (
-                      <tr key={a.symbol} className="border-t">
-                        <td className="px-4 py-2 font-medium">{a.symbol}</td>
-                        <td className="px-4 py-2">{a.name}</td>
-                        <td className="px-4 py-2">{a.price || '—'}</td>
-                        <td className="px-4 py-2">{a.targetAllocation}%</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xl font-semibold text-gray-900">Assets included</h2>
+                <span className="text-sm text-gray-500">Price | Target allocation</span>
               </div>
-              <p className="text-xs text-gray-500 mt-2">Prices are placeholders until a live feed is connected.</p>
+              <div className="bg-white rounded-xl shadow overflow-hidden divide-y divide-gray-100">
+                {(bundle as any).assets.map((a: any) => (
+                  <AssetCard
+                    key={a.symbol}
+                    symbol={a.symbol}
+                    name={a.name}
+                    targetAllocation={a.targetAllocation}
+                    price={a.price}
+                  />
+                ))}
+              </div>
             </section>
           )}
 

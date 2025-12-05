@@ -39,7 +39,10 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
           setCurrentStepId(1);
           sessionStorage.removeItem('whipnae-quiz-restart');
         } else {
-          setCurrentStepId(parsed.currentStepId || 1);
+          // Ensure currentStepId is valid (between 1 and total steps)
+          const savedStepId = parsed.currentStepId || 1;
+          const validStepId = Math.max(1, Math.min(savedStepId, quizSteps.length));
+          setCurrentStepId(validStepId);
         }
       } else {
         // No saved data, start fresh at step 1
@@ -50,6 +53,8 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
       }
     } catch (error) {
       console.error('Failed to load quiz progress:', error);
+      // On error, reset to step 1
+      setCurrentStepId(1);
     } finally {
       setIsLoading(false);
     }
@@ -113,15 +118,17 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
         }
       }
     } else {
-      // Move to next step
-      setCurrentStepId((prev) => prev + 1);
+      // Move to next step (ensure we don't exceed total steps)
+      const nextStepId = Math.min(currentStepId + 1, quizSteps.length);
+      setCurrentStepId(nextStepId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleBack = () => {
     if (currentStepId > 1) {
-      setCurrentStepId((prev) => prev - 1);
+      const prevStepId = Math.max(currentStepId - 1, 1);
+      setCurrentStepId(prevStepId);
       setErrors({});
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

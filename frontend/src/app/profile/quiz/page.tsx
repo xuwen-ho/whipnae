@@ -9,7 +9,14 @@ export default function QuizPage() {
 
   const handleComplete = (profile: FinancialProfile) => {
     console.log('Quiz completed with profile:', profile);
-    // Profile is shown in the QuizContainer's results screen
+    
+    // Auto-save profile when quiz is completed
+    try {
+      localStorage.setItem('whipnae-user-profile', JSON.stringify(profile));
+      console.log('Profile auto-saved on completion');
+    } catch (error) {
+      console.error('Failed to auto-save profile:', error);
+    }
   };
 
   const handleSave = (profile: FinancialProfile) => {

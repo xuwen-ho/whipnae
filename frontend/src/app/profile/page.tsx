@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FiHome, FiMessageCircle, FiUser } from "react-icons/fi";
+import Link from "next/link";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { FinancialProfileCard } from "@/components/profile/FinancialProfileCard";
 import { RecommendationsQuizCard } from "@/components/profile/RecommendationsQuizCard";
 import { SettingsToggleItem } from "@/components/profile/SettingsToggleItem";
 import { RemoteConnectionSection } from "@/components/remote";
-import type { FinancialProfile } from "@/lib/quiz/types";
+import type { FinancialProfile } from "@/lib/quiz_v2/types";
+import { bundles } from "@/lib/bundles";
 
 type AccessibilitySetting =
   | "simpleMode"
@@ -92,13 +93,17 @@ export default function ProfileSettingsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userName: profile.userName,
-          profileType: profile.profileType,
-          profileName: profile.profileName,
+          userName: profile.userName || "User",
+          profileType: profile.riskCategory,
+          profileName: `${profile.riskCategory} ${profile.expertiseLevel} Investor`,
           riskScore: profile.riskScore,
-          profileSummary: profile.profileSummary,
-          characteristics: profile.characteristics,
-          recommendations: profile.recommendations,
+          profileSummary: `A ${profile.riskCategory.toLowerCase()} investor with ${profile.expertiseLevel.toLowerCase()} expertise, focused on ${profile.primaryInterest || "diversified investments"}.`,
+          characteristics: {
+            timeHorizon: profile.timeHorizon || "medium",
+            knowledgeLevel: profile.expertiseLevel,
+            riskTolerance: profile.riskCategory,
+          },
+          recommendations: profile.suggestions || [],
         }),
       });
 
@@ -205,10 +210,11 @@ export default function ProfileSettingsPage() {
                 {userProfile ? (
                   <FinancialProfileCard
                     userName={userProfile.userName}
-                    profileName={userProfile.profileName}
-                    profileSummary={userProfile.profileSummary}
+                    profileName={userProfile.riskCategory}
+                    profileSummary={`${userProfile.expertiseLevel} investor with ${userProfile.timeHorizon || 'medium'}-term horizon`}
                     riskScore={userProfile.riskScore}
-                    knowledgeLevel={userProfile.characteristics?.knowledgeLevel}
+                    // knowledgeLevel={userProfile.characteristics?.knowledgeLevel}
+                    knowledgeLevel={userProfile.expertiseLevel}
                     aiInsights={aiInsights}
                     personalizationSummary={personalizationSummary}
                     isLoadingInsights={isLoadingInsights}
@@ -226,6 +232,66 @@ export default function ProfileSettingsPage() {
                   </div>
                 )}
               </div>
+            </section>
+
+            {/* Recommended Bundles Section */}
+            <section>
+              <h2 className="text-base font-semibold text-slate-900">Your Recommended Bundles</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Investment bundles matched to your financial profile.
+              </p>
+              {userProfile?.recommendedBundles && userProfile.recommendedBundles.length > 0 ? (
+                <>
+                  <div className="mt-4 space-y-3">
+                    {userProfile.recommendedBundles.map((bundleId) => {
+                      const bundle = bundles.find((b) => b.id === bundleId);
+                      if (!bundle) return null;
+                      return (
+                        <Link
+                          key={bundleId}
+                          href={`/invest/${bundleId}?context=for-you`}
+                          className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md"
+                        >
+                          <div className="h-14 w-14 flex-shrink-0 rounded-xl bg-slate-100 overflow-hidden">
+                            <img
+                              src={bundle.imageUrl}
+                              alt={bundle.title}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-slate-900">{bundle.title}</h3>
+                            <p className="text-sm text-slate-500 truncate">{bundle.description}</p>
+                          </div>
+                          <div className="flex-shrink-0 text-sm text-slate-400">
+                            Risk {bundle.riskLevel}
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  <Link
+                    href="/invest"
+                    className="mt-4 block text-center text-sm font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    View all bundles →
+                  </Link>
+                </>
+              ) : (
+                <div className="mt-4 rounded-2xl bg-white p-6 text-center shadow-sm">
+                  <p className="text-slate-600">
+                    {userProfile 
+                      ? "Retake the quiz to get personalized bundle recommendations!"
+                      : "Complete the quiz to get personalized bundle recommendations!"}
+                  </p>
+                  <button
+                    onClick={handleStartQuiz}
+                    className="mt-4 rounded-full bg-blue-600 px-6 py-2 font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    {userProfile ? "Retake Quiz" : "Take Quiz"}
+                  </button>
+                </div>
+              )}
             </section>
 
             <section>
