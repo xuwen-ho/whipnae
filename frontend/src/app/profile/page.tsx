@@ -208,7 +208,7 @@ export default function ProfileSettingsPage() {
                     profileName={userProfile.profileName}
                     profileSummary={userProfile.profileSummary}
                     riskScore={userProfile.riskScore}
-                    knowledgeLevel={userProfile.characteristics.knowledgeLevel}
+                    knowledgeLevel={userProfile.characteristics?.knowledgeLevel}
                     aiInsights={aiInsights}
                     personalizationSummary={personalizationSummary}
                     isLoadingInsights={isLoadingInsights}
