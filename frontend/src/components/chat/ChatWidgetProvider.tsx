@@ -8,7 +8,7 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useChat, type UIMessage } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { ChatWidgetButton } from './ChatWidgetButton';
@@ -66,12 +66,18 @@ interface ChatWidgetProviderProps {
   children: ReactNode;
 }
 
+// Mapping of element IDs to their target pages
+const ELEMENT_PAGE_MAP: Record<string, string> = {
+  'remote-connection': '/profile',
+};
+
 export function ChatWidgetProvider({ children }: ChatWidgetProviderProps) {
   const [widgetState, setWidgetState] = useState<WidgetState>('closed');
   const [chatKey, setChatKey] = useState(0); // Used to reset chat
   const [input, setInput] = useState(''); // Manage input state separately
   const [processedToolCalls, setProcessedToolCalls] = useState<Set<string>>(new Set()); // Track processed tool calls
   const pathname = usePathname();
+  const router = useRouter();
   const pageName = getPageName(pathname);
   
   // Use the chat hook
@@ -88,10 +94,24 @@ export function ChatWidgetProvider({ children }: ChatWidgetProviderProps) {
         const args = toolCall.input as { elementId: string; message?: string };
         console.log('🎯 [WIDGET] Dispatching highlight event for:', args.elementId);
         
-        // Dispatch custom event for the target component to listen to
-        window.dispatchEvent(new CustomEvent('highlight-ui-element', {
-          detail: { elementId: args.elementId, message: args.message }
-        }));
+        // Check if we need to navigate to a different page first
+        const targetPage = ELEMENT_PAGE_MAP[args.elementId];
+        if (targetPage && pathname !== targetPage) {
+          console.log('🧭 [WIDGET] Navigating to', targetPage, 'before highlighting');
+          router.push(targetPage);
+          // Delay the highlight event to allow navigation to complete, then scroll to bottom
+          setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            window.dispatchEvent(new CustomEvent('highlight-ui-element', {
+              detail: { elementId: args.elementId, message: args.message }
+            }));
+          }, 500);
+        } else {
+          // Already on the correct page, dispatch immediately
+          window.dispatchEvent(new CustomEvent('highlight-ui-element', {
+            detail: { elementId: args.elementId, message: args.message }
+          }));
+        }
       }
     },
     onFinish: (result) => {
@@ -131,10 +151,24 @@ export function ChatWidgetProvider({ children }: ChatWidgetProviderProps) {
         // Mark as processed
         setProcessedToolCalls(prev => new Set(prev).add(toolCallId));
         
-        // Dispatch the event
-        window.dispatchEvent(new CustomEvent('highlight-ui-element', {
-          detail: { elementId: args.elementId, message: args.message }
-        }));
+        // Check if we need to navigate to a different page first
+        const targetPage = ELEMENT_PAGE_MAP[args.elementId];
+        if (targetPage && pathname !== targetPage) {
+          console.log('🧭 [WIDGET] Navigating to', targetPage, 'before highlighting');
+          router.push(targetPage);
+          // Delay the highlight event to allow navigation to complete, then scroll to bottom
+          setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+            window.dispatchEvent(new CustomEvent('highlight-ui-element', {
+              detail: { elementId: args.elementId, message: args.message }
+            }));
+          }, 500);
+        } else {
+          // Already on the correct page, dispatch immediately
+          window.dispatchEvent(new CustomEvent('highlight-ui-element', {
+            detail: { elementId: args.elementId, message: args.message }
+          }));
+        }
       }
     }
   }, [messages, processedToolCalls]);
