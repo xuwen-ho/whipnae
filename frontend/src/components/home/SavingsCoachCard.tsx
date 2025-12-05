@@ -1,4 +1,6 @@
 "use client";
+import Link from "next/link";
+
 
 interface SavingsCoachProps {
     monthlyGoal: number;
@@ -81,9 +83,12 @@ export function SavingsCoachCard({
             </div>
 
             {/* CTA */}
-            <button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-2xl transition-all duration-200 shadow-md hover:shadow-lg">
+            <Link
+                href="/invest"
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-2xl transition-all duration-200 shadow-md hover:shadow-lg inline-flex items-center justify-center"
+            >
                 Use this amount to invest →
-            </button>
+            </Link>
         </section>
     );
 }
