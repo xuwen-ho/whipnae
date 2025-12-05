@@ -31,7 +31,7 @@ export function ChatWidgetButton({ hasMessages = false }: ChatWidgetButtonProps)
       
       <button
         onClick={open}
-        className="group fixed bottom-24 right-6 z-40 flex h-20 w-20 items-center justify-center rounded-full transition-transform duration-300 hover:scale-110 active:scale-95 focus:outline-none"
+        className="group fixed bottom-36 right-6 z-40 flex h-20 w-20 items-center justify-center rounded-full transition-transform duration-300 hover:scale-110 active:scale-95 focus:outline-none"
         aria-label={widgetState === 'minimized' ? 'Restore chat' : 'Open chat assistant'}
         style={{ filter: 'drop-shadow(0 0 20px rgba(16, 185, 129, 0.4))' }}
       >
