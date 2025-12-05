@@ -8,8 +8,13 @@ from typing import Optional, Dict, Any, List, Tuple
 import math
 from datetime import datetime, timedelta
 
+# Project root = .../whipnae
+HERE = Path(__file__).resolve()
+PROJECT_ROOT = HERE.parents[2]
 
-DB_PATH = Path(__file__).with_name("transactions.db")
+DB_PATH = PROJECT_ROOT / "frontend" / "src" / "lib" / "db" / "transactions.db"
+
+# DB_PATH = Path(__file__).with_name("transactions.db")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS transactions (
@@ -51,6 +56,8 @@ SEED_RECURRING = [
     ("中国移动广东 5G套餐", "Monthly", 68.00, "CNY", 1, ""),
     ("腾讯视频VIP月费", "Monthly", 20.00,   "CNY", 1, ""),
     ("爱奇艺VIP月费",  "Monthly", 19.00,   "CNY", 1, ""),
+    
+    ("Coffee", "Daily", 10.00, "CNY", 1, "Workday coffee"),
 
     # (Optional) keep the USD examples if you want
     # ("Daily Coffee", "Daily", 6.00, "USD", 1, "Default example"),
@@ -236,13 +243,27 @@ def compute_insights():
         if not tx or not meta.get("amount"):
             return {"ready": False, "reason": "transactions table or amount column not found"}
 
-        amount = meta["amount"]
-        date   = meta.get("date")
-        cat    = meta.get("category")
-        merch  = meta.get("merchant")
-        dire   = meta.get("direction")
+            # Column names coming from _detect_columns
+        amount_col = meta["amount"]
+        date       = meta.get("date")
+        cat        = meta.get("category")
+        merch      = meta.get("merchant")
+        dire       = meta.get("direction")
 
-                # Robust direction handling + fallback to numeric sign
+        # If the column is in cents, convert it to currency units for all calculations
+        amount_col = meta["amount"]
+        date       = meta.get("date")
+        cat        = meta.get("category")
+        merch      = meta.get("merchant")
+        dire       = meta.get("direction")
+
+        # 1) Normalize amount to currency units
+        if amount_col.lower().endswith("_cents"):
+            amount_expr = f"{amount_col} / 100.0"
+        else:
+            amount_expr = amount_col
+
+        # 2) Build signed_sql depending on whether a direction column exists
         if dire:
             dir_norm = f"LOWER(TRIM({dire}))"
             expense_terms = (
@@ -253,18 +274,49 @@ def compute_insights():
                 "'credit','income','inflow','deposit','refund','reversal','salary','payroll','transfer_in','interest',"
                 "'收入','转入','收款','cr','card credit'"
             )
-            # Use ABS(amount) when direction is known to avoid double-applying signs
+            # Use ABS(amount_expr) when direction is known to avoid double-applying signs
             signed_sql = f"""
-              CASE
-                WHEN {dir_norm} IN ({expense_terms}) THEN -1.0*ABS({amount})
-                WHEN {dir_norm} IN ({income_terms})  THEN  1.0*ABS({amount})
+            CASE
+                WHEN {dir_norm} IN ({expense_terms}) THEN -1.0*ABS({amount_expr})
+                WHEN {dir_norm} IN ({income_terms})  THEN  1.0*ABS({amount_expr})
                 -- unknown/missing direction → trust the numeric sign already in amount
-                ELSE {amount}
-              END
+                ELSE {amount_expr}
+            END
             """
         else:
-            # No direction column at all → rely on amount sign
-            signed_sql = f"{amount}"
+            # No direction column at all → rely on amount_expr sign
+            signed_sql = f"{amount_expr}"
+
+
+        # amount = meta["amount"]
+        # date   = meta.get("date")
+        # cat    = meta.get("category")
+        # merch  = meta.get("merchant")
+        # dire   = meta.get("direction")
+
+        #         # Robust direction handling + fallback to numeric sign
+        # if dire:
+        #     dir_norm = f"LOWER(TRIM({dire}))"
+        #     expense_terms = (
+        #         "'debit','expense','outflow','spend','spent','payment','withdrawal','purchase','fee','charge',"
+        #         "'支出','转出','扣款','dr','debit card','card debit'"
+        #     )
+        #     income_terms = (
+        #         "'credit','income','inflow','deposit','refund','reversal','salary','payroll','transfer_in','interest',"
+        #         "'收入','转入','收款','cr','card credit'"
+        #     )
+        #     # Use ABS(amount) when direction is known to avoid double-applying signs
+        #     signed_sql = f"""
+        #       CASE
+        #         WHEN {dir_norm} IN ({expense_terms}) THEN -1.0*ABS({amount})
+        #         WHEN {dir_norm} IN ({income_terms})  THEN  1.0*ABS({amount})
+        #         -- unknown/missing direction → trust the numeric sign already in amount
+        #         ELSE {amount}
+        #       END
+        #     """
+        # else:
+        #     # No direction column at all → rely on amount sign
+        #     signed_sql = f"{amount}"
 
 
         income_only_sql  = f"CASE WHEN ({signed_sql}) > 0 THEN ({signed_sql}) ELSE 0 END"
