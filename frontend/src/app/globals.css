@@ -314,3 +314,11 @@ body.simple-mode .pb-20 {
 body.simple-mode .pt-10 {
   padding-top: 3rem !important;
 }
+
+/* Left-align slick carousel in invest page when fewer slides than slidesToShow */
+.invest-carousel .slick-track { display: flex !important; justify-content: flex-start !important; }
+.invest-carousel .slick-slide { float: none !important; }
+
+/* Hide horizontal scrollbar on touch devices and most browsers */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

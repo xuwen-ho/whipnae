@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { PartialQuizResponse, FinancialProfile } from '@/lib/quiz/types';
-import { quizSteps } from '@/lib/quiz/questions';
-import { validateStep, isCompleteResponse } from '@/lib/quiz/validation';
-import { calculateFinancialProfile } from '@/lib/quiz/scoring';
+import type { PartialQuizResponse, FinancialProfile } from '@/lib/quiz_v2/types';
+import { quizSteps } from '@/lib/quiz_v2/questions';
+import { validateStep, isCompleteResponse } from '@/lib/quiz_v2/validation';
+import { calculateFinancialProfile } from '@/lib/quiz_v2/scoring';
 import { QuizProgress } from './QuizProgress';
 import { QuizStep } from './QuizStep';
 import { QuizResults } from './QuizResults';
@@ -39,7 +39,10 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
           setCurrentStepId(1);
           sessionStorage.removeItem('whipnae-quiz-restart');
         } else {
-          setCurrentStepId(parsed.currentStepId || 1);
+          // Ensure currentStepId is valid (between 1 and total steps)
+          const savedStepId = parsed.currentStepId || 1;
+          const validStepId = Math.max(1, Math.min(savedStepId, quizSteps.length));
+          setCurrentStepId(validStepId);
         }
       } else {
         // No saved data, start fresh at step 1
@@ -50,6 +53,8 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
       }
     } catch (error) {
       console.error('Failed to load quiz progress:', error);
+      // On error, reset to step 1
+      setCurrentStepId(1);
     } finally {
       setIsLoading(false);
     }
@@ -72,9 +77,9 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
     }
   }, [responses, currentStepId, isLoading]);
 
-  const currentStep = quizSteps.find((s) => s.id === currentStepId);
-  const isLastStep = currentStepId === quizSteps.length;
-  const isFirstStep = currentStepId === 1;
+  const currentStep = quizSteps.find((s) => s.id === currentStepId) || quizSteps[0];
+  const isLastStep = currentStep.id === quizSteps[quizSteps.length - 1].id;
+  const isFirstStep = currentStep.id === quizSteps[0].id;
 
   const handleResponseChange = (questionId: string, value: string | string[]) => {
     setResponses((prev) => ({
@@ -113,15 +118,17 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
         }
       }
     } else {
-      // Move to next step
-      setCurrentStepId((prev) => prev + 1);
+      // Move to next step (ensure we don't exceed total steps)
+      const nextStepId = Math.min(currentStepId + 1, quizSteps.length);
+      setCurrentStepId(nextStepId);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handleBack = () => {
     if (currentStepId > 1) {
-      setCurrentStepId((prev) => prev - 1);
+      const prevStepId = Math.max(currentStepId - 1, 1);
+      setCurrentStepId(prevStepId);
       setErrors({});
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

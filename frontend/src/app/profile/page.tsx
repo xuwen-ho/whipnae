@@ -2,25 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FiHome, FiMessageCircle, FiUser } from "react-icons/fi";
+import Link from "next/link";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { FinancialProfileCard } from "@/components/profile/FinancialProfileCard";
 import { RecommendationsQuizCard } from "@/components/profile/RecommendationsQuizCard";
 import { SettingsToggleItem } from "@/components/profile/SettingsToggleItem";
 import { RemoteConnectionSection } from "@/components/remote";
-import type { FinancialProfile } from "@/lib/quiz/types";
+import type { FinancialProfile } from "@/lib/quiz_v2/types";
+import { bundles } from "@/lib/bundles";
 
 type AccessibilitySetting =
   | "simpleMode"
   | "visuallyImpairedMode"
   | "dyslexiaFriendlyFont";
-
-const profileNavItems = [
-  { id: "home", link: "/", label: "Home", icon: FiHome },
-  { id: "Chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
-  { id: "profile", link: "/profile", label: "Profile", icon: FiUser, isActive: true },
-];
 
 export default function ProfileSettingsPage() {
   const router = useRouter();
@@ -37,32 +32,32 @@ export default function ProfileSettingsPage() {
 
   // Load saved profile, insights, and accessibility settings from localStorage on mount
   useEffect(() => {
-    const savedProfile = localStorage.getItem('whipnae-user-profile');
+    const savedProfile = localStorage.getItem("whipnae-user-profile");
     if (savedProfile) {
       try {
         const profile = JSON.parse(savedProfile) as FinancialProfile;
         setUserProfile(profile);
-        // Don't auto-generate insights on load to avoid quota issues
+        // Don"t auto-generate insights on load to avoid quota issues
         // User can manually trigger with the regenerate button
       } catch (error) {
-        console.error('Failed to load profile:', error);
+        console.error("Failed to load profile:", error);
       }
     }
 
     // Load saved insights if they exist
-    const savedInsights = localStorage.getItem('whipnae-ai-insights');
+    const savedInsights = localStorage.getItem("whipnae-ai-insights");
     if (savedInsights) {
       try {
         const insightsData = JSON.parse(savedInsights);
         setAiInsights(insightsData.insights || []);
-        setPersonalizationSummary(insightsData.personalizationSummary || '');
+        setPersonalizationSummary(insightsData.personalizationSummary || "");
       } catch (error) {
-        console.error('Failed to load insights:', error);
+        console.error("Failed to load insights:", error);
       }
     }
 
     // Load saved accessibility settings
-    const savedSettings = localStorage.getItem('whipnae-accessibility-settings');
+    const savedSettings = localStorage.getItem("whipnae-accessibility-settings");
     if (savedSettings) {
       try {
         const settings = JSON.parse(savedSettings);
@@ -70,20 +65,20 @@ export default function ProfileSettingsPage() {
 
         // Apply dyslexic font if enabled
         if (settings.dyslexiaFriendlyFont) {
-          document.body.classList.add('dyslexic-font');
+          document.body.classList.add("dyslexic-font");
         }
 
         // Apply simple mode if enabled
         if (settings.simpleMode) {
-          document.body.classList.add('simple-mode');
+          document.body.classList.add("simple-mode");
         }
 
         // Apply visually impaired mode if enabled
         if (settings.visuallyImpairedMode) {
-          document.body.classList.add('visually-impaired-mode');
+          document.body.classList.add("visually-impaired-mode");
         }
       } catch (error) {
-        console.error('Failed to load accessibility settings:', error);
+        console.error("Failed to load accessibility settings:", error);
       }
     }
   }, []);
@@ -92,24 +87,28 @@ export default function ProfileSettingsPage() {
     setIsLoadingInsights(true);
 
     try {
-      const response = await fetch('/api/profile/insights', {
-        method: 'POST',
+      const response = await fetch("/api/profile/insights", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userName: profile.userName,
-          profileType: profile.profileType,
-          profileName: profile.profileName,
+          userName: profile.userName || "User",
+          profileType: profile.riskCategory,
+          profileName: `${profile.riskCategory} ${profile.expertiseLevel} Investor`,
           riskScore: profile.riskScore,
-          profileSummary: profile.profileSummary,
-          characteristics: profile.characteristics,
-          recommendations: profile.recommendations,
+          profileSummary: `A ${profile.riskCategory.toLowerCase()} investor with ${profile.expertiseLevel.toLowerCase()} expertise, focused on ${profile.primaryInterest || "diversified investments"}.`,
+          characteristics: {
+            timeHorizon: profile.timeHorizon || "medium",
+            knowledgeLevel: profile.expertiseLevel,
+            riskTolerance: profile.riskCategory,
+          },
+          recommendations: profile.suggestions || [],
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate insights');
+        throw new Error("Failed to generate insights");
       }
 
       const data = await response.json();
@@ -117,12 +116,12 @@ export default function ProfileSettingsPage() {
       setPersonalizationSummary(data.personalizationSummary);
 
       // Save insights to localStorage for persistence
-      localStorage.setItem('whipnae-ai-insights', JSON.stringify({
+      localStorage.setItem("whipnae-ai-insights", JSON.stringify({
         insights: data.insights,
         personalizationSummary: data.personalizationSummary,
       }));
     } catch (error) {
-      console.error('Error generating insights:', error);
+      console.error("Error generating insights:", error);
       // Show friendly error state
       setAiInsights([]);
     } finally {
@@ -144,37 +143,40 @@ export default function ProfileSettingsPage() {
       };
 
       // Save to localStorage
-      localStorage.setItem('whipnae-accessibility-settings', JSON.stringify(newSettings));
+      localStorage.setItem(
+        "whipnae-accessibility-settings",
+        JSON.stringify(newSettings)
+      );
 
       // Apply dyslexic font immediately
-      if (setting === 'dyslexiaFriendlyFont') {
+      if (setting === "dyslexiaFriendlyFont") {
         if (newSettings.dyslexiaFriendlyFont) {
-          document.body.classList.add('dyslexic-font');
+          document.body.classList.add("dyslexic-font");
         } else {
-          document.body.classList.remove('dyslexic-font');
+          document.body.classList.remove("dyslexic-font");
         }
       }
 
       // Apply simple mode immediately
-      if (setting === 'simpleMode') {
+      if (setting === "simpleMode") {
         if (newSettings.simpleMode) {
-          document.body.classList.add('simple-mode');
+          document.body.classList.add("simple-mode");
         } else {
-          document.body.classList.remove('simple-mode');
+          document.body.classList.remove("simple-mode");
         }
       }
 
       // Apply visually impaired mode immediately
-      if (setting === 'visuallyImpairedMode') {
+      if (setting === "visuallyImpairedMode") {
         if (newSettings.visuallyImpairedMode) {
-          document.body.classList.add('visually-impaired-mode');
+          document.body.classList.add("visually-impaired-mode");
         } else {
-          document.body.classList.remove('visually-impaired-mode');
+          document.body.classList.remove("visually-impaired-mode");
         }
       }
 
       // Dispatch custom event to notify other components
-      window.dispatchEvent(new Event('accessibility-settings-changed'));
+      window.dispatchEvent(new Event("accessibility-settings-changed"));
 
       return newSettings;
     });
@@ -182,8 +184,8 @@ export default function ProfileSettingsPage() {
 
   const handleStartQuiz = () => {
     // Set flag to start from step 1
-    sessionStorage.setItem('whipnae-quiz-restart', 'true');
-    router.push('/profile/quiz');
+    sessionStorage.setItem("whipnae-quiz-restart", "true");
+    router.push("/profile/quiz");
   };
 
   return (
@@ -208,10 +210,10 @@ export default function ProfileSettingsPage() {
                 {userProfile ? (
                   <FinancialProfileCard
                     userName={userProfile.userName}
-                    profileName={userProfile.profileName}
-                    profileSummary={userProfile.profileSummary}
+                    profileName={userProfile.riskCategory}
+                    profileSummary={`${userProfile.expertiseLevel} investor with ${userProfile.timeHorizon || 'medium'}-term horizon`}
                     riskScore={userProfile.riskScore}
-                    knowledgeLevel={userProfile.characteristics.knowledgeLevel}
+                    knowledgeLevel={userProfile.expertiseLevel}
                     aiInsights={aiInsights}
                     personalizationSummary={personalizationSummary}
                     isLoadingInsights={isLoadingInsights}
@@ -229,6 +231,66 @@ export default function ProfileSettingsPage() {
                   </div>
                 )}
               </div>
+            </section>
+
+            {/* Recommended Bundles Section */}
+            <section>
+              <h2 className="text-base font-semibold text-slate-900">Your Recommended Bundles</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Investment bundles matched to your financial profile.
+              </p>
+              {userProfile?.recommendedBundles && userProfile.recommendedBundles.length > 0 ? (
+                <>
+                  <div className="mt-4 space-y-3">
+                    {userProfile.recommendedBundles.map((bundleId) => {
+                      const bundle = bundles.find((b) => b.id === bundleId);
+                      if (!bundle) return null;
+                      return (
+                        <Link
+                          key={bundleId}
+                          href={`/invest/${bundleId}?context=for-you`}
+                          className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-sm transition hover:shadow-md"
+                        >
+                          <div className="h-14 w-14 flex-shrink-0 rounded-xl bg-slate-100 overflow-hidden">
+                            <img
+                              src={bundle.imageUrl}
+                              alt={bundle.title}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-slate-900">{bundle.title}</h3>
+                            <p className="text-sm text-slate-500 truncate">{bundle.description}</p>
+                          </div>
+                          <div className="flex-shrink-0 text-sm text-slate-400">
+                            Risk {bundle.riskLevel}
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                  <Link
+                    href="/invest"
+                    className="mt-4 block text-center text-sm font-medium text-blue-600 hover:text-blue-700"
+                  >
+                    View all bundles →
+                  </Link>
+                </>
+              ) : (
+                <div className="mt-4 rounded-2xl bg-white p-6 text-center shadow-sm">
+                  <p className="text-slate-600">
+                    {userProfile 
+                      ? "Retake the quiz to get personalized bundle recommendations!"
+                      : "Complete the quiz to get personalized bundle recommendations!"}
+                  </p>
+                  <button
+                    onClick={handleStartQuiz}
+                    className="mt-4 rounded-full bg-blue-600 px-6 py-2 font-semibold text-white transition hover:bg-blue-700"
+                  >
+                    {userProfile ? "Retake Quiz" : "Take Quiz"}
+                  </button>
+                </div>
+              )}
             </section>
 
             <section>
@@ -271,7 +333,7 @@ export default function ProfileSettingsPage() {
         </div>
       </main>
 
-      <BottomNav items={profileNavItems} />
+      <BottomNav />
     </div>
   );
 }

@@ -1,7 +1,11 @@
+
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from 'ai';
 import { useState } from 'react';
 import { BottomNav } from '@/components/layout/BottomNav';
 import ReactMarkdown from 'react-markdown';
@@ -9,10 +13,10 @@ import ReactMarkdown from 'react-markdown';
 // Collapsible Tool Call Component
 function ToolCallDisplay({ part, index }: { part: any; index: number }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   // Extract tool name from type (e.g., "tool-getSpendingByCategory" -> "getSpendingByCategory")
   const toolName = part.type.replace('tool-', '');
-  
+
   return (
     <div className="mb-2 overflow-hidden rounded border border-blue-300 bg-blue-50">
       <button
@@ -46,27 +50,7 @@ export default function Page() {
     transport: new DefaultChatTransport({
       api: '/api/chat',
     }),
-    onToolCall: async ({ toolCall }) => {
-      console.log('🔧 [FRONTEND] Tool call detected:', toolCall);
-      // The SDK automatically executes tools and adds results to the conversation
-      return undefined;
-    },
-    onFinish: (result) => {
-      console.log('🏁 [FRONTEND] Chat finished:', result);
-      console.log('🏁 [FRONTEND] Finish reason:', result.finishReason);
-      
-      // If the model stopped after calling tools, we need to continue the conversation
-      // by sending the tool results back to get a final response
-      if (result.finishReason === 'tool-calls') {
-        console.log('⚠️ [FRONTEND] Model stopped after tool calls - continuing conversation...');
-        // The tool results are already in the messages array
-        // We need to send an empty message to trigger the model to process tool results
-        setTimeout(() => {
-          console.log('🔄 [FRONTEND] Sending continuation request...');
-          sendMessage({ text: '' }); // Send empty message to continue
-        }, 100);
-      }
-    },
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
   });
 
   return (

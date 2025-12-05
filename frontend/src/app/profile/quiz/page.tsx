@@ -2,14 +2,21 @@
 
 import { useRouter } from 'next/navigation';
 import { QuizContainer } from '@/components/quiz/QuizContainer';
-import type { FinancialProfile } from '@/lib/quiz/types';
+import type { FinancialProfile } from '@/lib/quiz_v2/types';
 
 export default function QuizPage() {
   const router = useRouter();
 
   const handleComplete = (profile: FinancialProfile) => {
     console.log('Quiz completed with profile:', profile);
-    // Profile is shown in the QuizContainer's results screen
+    
+    // Auto-save profile when quiz is completed
+    try {
+      localStorage.setItem('whipnae-user-profile', JSON.stringify(profile));
+      console.log('Profile auto-saved on completion');
+    } catch (error) {
+      console.error('Failed to auto-save profile:', error);
+    }
   };
 
   const handleSave = (profile: FinancialProfile) => {
