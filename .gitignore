@@ -13,4 +13,4 @@
 # OS files
 .DS_Store
 *.pyc
-node_modules
+/node_modules
