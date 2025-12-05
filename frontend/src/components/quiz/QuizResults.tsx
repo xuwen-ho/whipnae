@@ -30,7 +30,7 @@ export function QuizResults({ profile, onRetake, onSave }: QuizResultsProps) {
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-2xl font-bold text-blue-900">{profile.userName ? `${profile.userName}'s Profile` : 'Your Profile'}</h3>
           <div className="rounded-full bg-blue-600 px-4 py-1 text-sm font-semibold text-white">
-            Risk Score: {profile.riskScore} ({profile.riskCategory})
+            Risk Score: {profile.riskScore}/10 ({profile.riskCategory})
           </div>
         </div>
         <p className="text-slate-700">Level of expertise: {profile.expertiseLevel}</p>

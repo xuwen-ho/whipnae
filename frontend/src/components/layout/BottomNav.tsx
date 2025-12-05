@@ -11,7 +11,7 @@ type NavItem = {
   link: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
-  requiresExpert?: boolean; // Only show if user is expert
+  requiresAdvanced?: boolean; // Only show if user is Intermediate or Expert
 };
 
 type BottomNavProps = {
@@ -21,14 +21,14 @@ type BottomNavProps = {
 const defaultItems: NavItem[] = [
   { id: "home", link: "/", label: "Home", icon: FiHome },
   { id: "invest", link: "/invest", label: "Invest", icon: FiTrendingUp },
-  { id: "stocks", link: "/stocks", label: "Stocks", icon: FiBarChart2, requiresExpert: true },
+  { id: "stocks", link: "/stocks", label: "Stocks", icon: FiBarChart2, requiresAdvanced: true },
   { id: "chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
   { id: "profile", link: "/profile", label: "Profile", icon: FiUser },
 ];
 
 export function BottomNav({ items = defaultItems }: BottomNavProps) {
   const pathname = usePathname();
-  const [isExpert, setIsExpert] = useState(false);
+  const [isAdvancedUser, setIsAdvancedUser] = useState(false);
 
   // Check user's expertise level from localStorage
   useEffect(() => {
@@ -37,7 +37,8 @@ export function BottomNav({ items = defaultItems }: BottomNavProps) {
         const savedProfile = localStorage.getItem("whipnae-user-profile");
         if (savedProfile) {
           const profile = JSON.parse(savedProfile) as FinancialProfile;
-          setIsExpert(profile.expertiseLevel === "Expert");
+          // Show Stocks tab for Intermediate or Expert users
+          setIsAdvancedUser(profile.expertiseLevel === "Intermediate" || profile.expertiseLevel === "Expert");
         }
       } catch (error) {
         console.error("Failed to check expertise level:", error);
@@ -59,7 +60,7 @@ export function BottomNav({ items = defaultItems }: BottomNavProps) {
   }, []);
 
   // Filter items based on expertise
-  const visibleItems = items.filter((item) => !item.requiresExpert || isExpert);
+  const visibleItems = items.filter((item) => !item.requiresAdvanced || isAdvancedUser);
 
   return (
     <nav className="sticky bottom-0 z-30 border-t border-slate-200 bg-white">

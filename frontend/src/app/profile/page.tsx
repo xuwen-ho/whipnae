@@ -93,13 +93,17 @@ export default function ProfileSettingsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          userName: profile.userName,
-          riskCategory: profile.riskCategory,
+          userName: profile.userName || "User",
+          profileType: profile.riskCategory,
+          profileName: `${profile.riskCategory} ${profile.expertiseLevel} Investor`,
           riskScore: profile.riskScore,
-          expertiseLevel: profile.expertiseLevel,
-          primaryInterest: profile.primaryInterest,
-          timeHorizon: profile.timeHorizon,
-          suggestions: profile.suggestions,
+          profileSummary: `A ${profile.riskCategory.toLowerCase()} investor with ${profile.expertiseLevel.toLowerCase()} expertise, focused on ${profile.primaryInterest || "diversified investments"}.`,
+          characteristics: {
+            timeHorizon: profile.timeHorizon || "medium",
+            knowledgeLevel: profile.expertiseLevel,
+            riskTolerance: profile.riskCategory,
+          },
+          recommendations: profile.suggestions || [],
         }),
       });
 

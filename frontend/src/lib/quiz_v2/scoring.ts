@@ -84,11 +84,12 @@ export function calculateFinancialProfile(responses: QuizResponse): FinancialPro
     (RISK_POINTS_Q9[q9] || 0);
 
   const max_risk_points_total = 51; // as specified
-  const riskScore = Math.round((risk_points_total / max_risk_points_total) * 100);
+  // Calculate risk score out of 10 (with one decimal place)
+  const riskScore = Math.round((risk_points_total / max_risk_points_total) * 100) / 10;
 
   let riskCategory: FinancialProfile['riskCategory'] = 'Moderate';
-  if (riskScore <= 33) riskCategory = 'Conservative';
-  else if (riskScore <= 66) riskCategory = 'Moderate';
+  if (riskScore <= 3.3) riskCategory = 'Conservative';
+  else if (riskScore <= 6.6) riskCategory = 'Moderate';
   else riskCategory = 'Aggressive';
 
   // Expertise calculation
