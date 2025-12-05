@@ -100,7 +100,27 @@ type RecurringItem = {
   notes?: string;
 };
 
-export function RecurringCostTrackerCard() {
+type RecurringCostTrackerProps = {
+  onExtraSavingsChange?: (extraPerMonth: number) => void;
+};
+
+const toMonthlyAmount = (amount: number, cadence: string): number => {
+  switch (cadence) {
+    case "Daily":
+      return amount * (365.25 / 12);  // ≈ 30.4 days
+    case "Weekly":
+      return amount * (52 / 12);      // ≈ 4.33 weeks
+    case "Monthly":
+      return amount;
+    case "Yearly":
+      return amount / 12;
+    default:
+      return amount;
+  }
+};
+
+
+export function RecurringCostTrackerCard({ onExtraSavingsChange }: RecurringCostTrackerProps) {
   const [items, setItems] = useState<RecurringItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [savingId, setSavingId] = useState<number | null>(null);
@@ -132,6 +152,21 @@ export function RecurringCostTrackerCard() {
     () => (items || []).filter(i => i.recurring === 1).reduce((s, i) => s + (i.amount || 0), 0),
     [items]
   );
+
+  // Extra savings per month from items that are OFF (recurring === 0)
+  const extraSavingsFromOff = useMemo(() => {
+    if (!items) return 0;
+    return items
+      .filter(i => i.recurring === 0)
+      .reduce((sum, i) => sum + toMonthlyAmount(i.amount || 0, i.cadence), 0);
+  }, [items]);
+
+  useEffect(() => {
+    if (onExtraSavingsChange) {
+      onExtraSavingsChange(extraSavingsFromOff);
+    }
+  }, [extraSavingsFromOff, onExtraSavingsChange]);
+
 
   const toggle = async (item: RecurringItem) => {
     const next = item.recurring === 1 ? 0 : 1;
@@ -259,7 +294,7 @@ export function RecurringCostTrackerCard() {
         Tip: If <em>Daily Coffee</em> isn’t really $6/day, click the amount to edit it, then toggle OFF to pause it.
       </p>
 
-      
+
     </section>
   );
 }
