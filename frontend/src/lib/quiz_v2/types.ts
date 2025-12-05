@@ -71,6 +71,7 @@ export interface FinancialProfile {
   primaryInterest: string;
   timeHorizon: TimeHorizon | null;
   suggestions: string[];
+  recommendedBundles?: string[]; // Array of bundle IDs
 }
 
 /**

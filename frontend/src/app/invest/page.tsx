@@ -23,7 +23,7 @@ const InvestPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <BalanceChart balance="$40,000" dailyReturn="+5.69" />
+        <BalanceChart balance="$40,000" />
 
         <SectionHeader title="HOLDINGS" />
         <BundleCarousel bundles={holdings} context="holdings" />

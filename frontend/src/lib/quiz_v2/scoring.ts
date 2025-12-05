@@ -1,4 +1,5 @@
 import type { QuizResponse, FinancialProfile } from './types';
+import { getTopBundleRecommendations } from './bundleRecommendations';
 
 // Risk points mapping per question as provided
 const RISK_POINTS_Q2: Record<string, number> = {
@@ -221,15 +222,20 @@ export function calculateFinancialProfile(responses: QuizResponse): FinancialPro
   // trim to max 6
   while (finalSuggestions.length > 6) finalSuggestions.pop();
 
+  // Build profile first without recommendations
   const profile: FinancialProfile = {
     userName: responses.userName,
     riskScore,
     riskCategory,
     expertiseLevel,
     primaryInterest,
-    timeHorizon: (responses.timeHorizon as any) || null,
+    timeHorizon: responses.timeHorizon || null,
     suggestions: finalSuggestions,
   };
+
+  // Get recommended bundle IDs and add to profile
+  const recommendations = getTopBundleRecommendations(profile, 3);
+  profile.recommendedBundles = recommendations.map(r => r.bundleId);
 
   return profile;
 }
