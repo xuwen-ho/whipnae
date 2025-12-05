@@ -21,12 +21,8 @@ type BottomNavProps = {
 const defaultItems: NavItem[] = [
   { id: "home", link: "/", label: "Home", icon: FiHome },
   { id: "invest", link: "/invest", label: "Invest", icon: FiTrendingUp },
-<<<<<<< HEAD
-  { id: "stocks", link: "/stocks", label: "Stocks", icon: FiBarChart2 },
-=======
   { id: "stocks", link: "/stocks", label: "Stocks", icon: FiBarChart2, requiresAdvanced: true },
   { id: "chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
->>>>>>> main
   { id: "profile", link: "/profile", label: "Profile", icon: FiUser },
 ];
 
