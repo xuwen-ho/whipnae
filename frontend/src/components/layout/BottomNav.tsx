@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiHome, FiMessageCircle, FiUser } from "react-icons/fi";
+import { FiHome, FiUser } from "react-icons/fi";
 
 type NavItem = {
   id: string;
@@ -17,7 +17,6 @@ type BottomNavProps = {
 
 const defaultItems: NavItem[] = [
   { id: "home", link: "/", label: "Home", icon: FiHome },
-  { id: "chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
   { id: "profile", link: "/profile", label: "Profile", icon: FiUser },
 ];
 

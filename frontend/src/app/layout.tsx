@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { RemoteConnectionProvider } from "@/components/remote";
+import { ChatWidgetProvider } from "@/components/chat";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,9 +57,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${openDyslexic.variable} antialiased`}
       >
-        <RemoteConnectionProvider>
-          {children}
-        </RemoteConnectionProvider>
+        <ChatWidgetProvider>
+          <RemoteConnectionProvider>
+            {children}
+          </RemoteConnectionProvider>
+        </ChatWidgetProvider>
         <AccessibilityProvider />
       </body>
     </html>

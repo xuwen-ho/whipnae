@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { FiHome, FiMessageCircle, FiUser } from "react-icons/fi";
+import { FiHome, FiUser } from "react-icons/fi";
 
 import { BottomNav } from "@/components/layout/BottomNav";
 import { FinancialProfileCard } from "@/components/profile/FinancialProfileCard";
@@ -18,7 +18,6 @@ type AccessibilitySetting =
 
 const profileNavItems = [
   { id: "home", link: "/", label: "Home", icon: FiHome },
-  { id: "Chat", link: "/chat", label: "Chat", icon: FiMessageCircle },
   { id: "profile", link: "/profile", label: "Profile", icon: FiUser, isActive: true },
 ];
 
