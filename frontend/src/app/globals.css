@@ -33,287 +33,66 @@ body.dyslexic-font {
 body.dyslexic-font * {
   font-family: var(--font-dyslexic) !important;
 }
-
-/* Simple Mode for elderly users */
+/* --- SIMPLE MODE START --- */
+/* 1. Base overrides */
 body.simple-mode {
-  /* Uniform scaling while maintaining proportions */
-  zoom: 1.25;
   line-height: 1.6;
+  /* Catch-all for text without specific classes */
+  font-size: 20px !important; 
 }
 
-/* Simplified visual design - reduce shadows and rounded corners */
-body.simple-mode .shadow-sm,
-body.simple-mode .shadow,
-body.simple-mode .shadow-md,
-body.simple-mode .shadow-lg {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2) !important;
+/* 2. Force Tailwind Text Classes to Grow 
+   We map each size one or two steps up. 
+   (e.g., small text becomes large, base text becomes extra large) 
+*/
+body.simple-mode .text-xs   { font-size: 16px !important; }
+body.simple-mode .text-sm   { font-size: 18px !important; }
+body.simple-mode .text-base { font-size: 20px !important; }
+body.simple-mode .text-lg   { font-size: 24px !important; }
+body.simple-mode .text-xl   { font-size: 28px !important; }
+body.simple-mode .text-2xl  { font-size: 32px !important; }
+
+/* 3. Make Headings & Titles Huge */
+body.simple-mode h1, 
+body.simple-mode h2, 
+body.simple-mode h3,
+body.simple-mode .font-semibold,
+body.simple-mode .font-bold {
+  font-weight: 800 !important; /* Make them extra thick */
+  letter-spacing: 0.02em;
 }
 
-body.simple-mode .rounded-3xl {
-  border-radius: 16px !important;
-}
-
-body.simple-mode .rounded-2xl {
-  border-radius: 12px !important;
-}
-
-body.simple-mode .rounded-xl,
-body.simple-mode .rounded-lg {
-  border-radius: 8px !important;
-}
-
-body.simple-mode .rounded-full:not(.accessibility-toggle):not(.accessibility-toggle *) {
-  border-radius: 8px !important; /* Convert fully rounded to slightly rounded for clarity */
-}
-
-/* Keep toggle switches looking correct */
-.accessibility-toggle.bg-blue-600 {
-  background-color: #2563eb !important;
-}
-
-.accessibility-toggle.bg-white {
-  background-color: #ffffff !important;
-}
-
-body.simple-mode .accessibility-toggle {
-  border-radius: 9999px !important;
-}
-
-body.simple-mode .accessibility-toggle span {
-  border-radius: 9999px !important;
-}
-
-/* High contrast colors for better visibility */
-body.simple-mode {
-  --color-text-primary: #000000;
-  --color-text-secondary: #374151;
-  --color-background: #ffffff;
-}
-
-body.simple-mode .text-slate-500,
-body.simple-mode .text-slate-600,
-body.simple-mode .text-gray-500,
-body.simple-mode .text-gray-600 {
-  color: #374151 !important; /* Darker gray for better contrast */
-}
-
-body.simple-mode .text-slate-400,
-body.simple-mode .text-gray-400 {
-  color: #4b5563 !important;
-}
-
-body.simple-mode .text-slate-900,
-body.simple-mode .text-gray-900 {
-  color: #000000 !important;
-}
-
-/* Simplify buttons - solid colors, clear borders */
+/* 4. Giant Buttons & Inputs */
 body.simple-mode button:not(.accessibility-toggle),
 body.simple-mode a.button,
-body.simple-mode input[type="button"],
-body.simple-mode input[type="submit"] {
-  min-height: 48px;
-  padding: 0.875rem 1.5rem;
-  font-size: 1.1em;
-  font-weight: 700 !important; /* Bolder text */
-  border-radius: 8px !important;
-  border: 2px solid transparent;
+body.simple-mode input[type="submit"],
+body.simple-mode input[type="button"] {
+  min-height: 60px !important;        /* Taller touch target */
+  font-size: 20px !important;         /* Larger text */
+  padding-left: 32px !important;
+  padding-right: 32px !important;
+  border: 3px solid currentColor !important; /* High contrast border */
 }
 
-body.simple-mode button:not(.bg-blue-600):not(.bg-white):not(.accessibility-toggle) {
-  background-color: #1e40af !important;
-  color: white !important;
-  border-color: #1e40af !important;
-}
-
-body.simple-mode .bg-blue-600:not(.accessibility-toggle) {
-  background-color: #1e40af !important;
-  border: 2px solid #1e40af !important;
-}
-
-body.simple-mode .bg-white button:not(.accessibility-toggle),
-body.simple-mode button.bg-white:not(.accessibility-toggle) {
-  background-color: #ffffff !important;
-  color: #1e40af !important;
-  border: 2px solid #1e40af !important;
-}
-
-/* Larger, clearer input fields */
+/* 5. Inputs you type in */
 body.simple-mode input[type="text"],
 body.simple-mode input[type="email"],
 body.simple-mode input[type="number"],
-body.simple-mode select,
-body.simple-mode textarea {
-  min-height: 48px;
-  padding: 0.75rem;
-  font-size: 1.1em;
-  border: 3px solid #374151 !important; /* Thicker, darker border */
-  border-radius: 8px !important;
-  background-color: #ffffff !important;
+body.simple-mode select {
+  min-height: 60px !important;
+  font-size: 20px !important;
+  padding: 12px !important;
 }
 
-body.simple-mode input[type="text"]:focus,
-body.simple-mode input[type="email"]:focus,
-body.simple-mode input[type="number"]:focus,
-body.simple-mode select:focus,
-body.simple-mode textarea:focus {
-  border-color: #1e40af !important;
-  outline: 2px solid #1e40af !important;
-  outline-offset: 2px;
-}
-
-body.simple-mode input[type="radio"],
-body.simple-mode input[type="checkbox"] {
+/* 6. Giant Checkboxes */
+body.simple-mode input[type="checkbox"],
+body.simple-mode input[type="radio"] {
   width: 28px;
   height: 28px;
   margin-right: 12px;
-  border: 3px solid #374151 !important;
+  transform: translateY(6px); /* Align with the new larger text */
 }
-
-/* Reduce visual noise - simpler backgrounds */
-body.simple-mode .bg-gradient-to-br,
-body.simple-mode .bg-gradient-to-r,
-body.simple-mode .bg-gradient-to-l {
-  background-image: none !important;
-  background-color: #ffffff !important;
-  border: 2px solid #e5e7eb !important;
-}
-
-/* Remove subtle colors, use clear black/white contrast */
-body.simple-mode .bg-slate-100,
-body.simple-mode .bg-gray-100 {
-  background-color: #f9fafb !important;
-}
-
-body.simple-mode .bg-blue-50 {
-  background-color: #eff6ff !important;
-  border: 2px solid #3b82f6 !important;
-}
-
-/* Disable animations and transitions for less distraction */
-body.simple-mode * {
-  transition: none !important;
-  animation: none !important;
-}
-
-/* Hide decorative elements */
-body.simple-mode .simple-mode-hide {
-  display: none !important;
-}
-
-body.simple-mode .rounded-3xl,
-body.simple-mode .rounded-2xl,
-body.simple-mode .rounded-xl {
-  /* Increase spacing in cards */
-  padding: 2rem !important;
-  margin-bottom: 1.5rem !important;
-}
-
-body.simple-mode p {
-  /* Increased spacing between paragraphs */
-  margin-bottom: 0.875rem;
-}
-
-body.simple-mode .space-y-2 > * + * {
-  margin-top: 1.25rem !important;
-}
-
-body.simple-mode .space-y-3 > * + * {
-  margin-top: 1.5rem !important;
-}
-
-body.simple-mode .space-y-4 > * + * {
-  margin-top: 2rem !important;
-}
-
-body.simple-mode .space-y-6 > * + * {
-  margin-top: 2.5rem !important;
-}
-
-body.simple-mode .space-y-8 > * + * {
-  margin-top: 3rem !important;
-}
-
-body.simple-mode .gap-2 {
-  gap: 1.25rem !important;
-}
-
-body.simple-mode .gap-3 {
-  gap: 1.5rem !important;
-}
-
-body.simple-mode .gap-4 {
-  gap: 2rem !important;
-}
-
-body.simple-mode .flex {
-  /* Ensure flex items have proper spacing */
-  gap: 1rem;
-}
-
-body.simple-mode .p-6 {
-  padding: 2rem !important;
-}
-
-body.simple-mode .p-4 {
-  padding: 1.5rem !important;
-}
-
-body.simple-mode .p-3 {
-  padding: 1.25rem !important;
-}
-
-body.simple-mode .px-6 {
-  padding-left: 2rem !important;
-  padding-right: 2rem !important;
-}
-
-body.simple-mode .py-6 {
-  padding-top: 2rem !important;
-  padding-bottom: 2rem !important;
-}
-
-body.simple-mode .px-4 {
-  padding-left: 1.5rem !important;
-  padding-right: 1.5rem !important;
-}
-
-body.simple-mode .py-4 {
-  padding-top: 1.5rem !important;
-  padding-bottom: 1.5rem !important;
-}
-
-body.simple-mode .mt-2 {
-  margin-top: 1rem !important;
-}
-
-body.simple-mode .mt-3 {
-  margin-top: 1.25rem !important;
-}
-
-body.simple-mode .mt-4 {
-  margin-top: 1.5rem !important;
-}
-
-body.simple-mode .mb-2 {
-  margin-bottom: 1rem !important;
-}
-
-body.simple-mode .mb-3 {
-  margin-bottom: 1.25rem !important;
-}
-
-body.simple-mode .mb-4 {
-  margin-bottom: 1.5rem !important;
-}
-
-body.simple-mode .pb-20 {
-  padding-bottom: 6rem !important;
-}
-
-body.simple-mode .pt-10 {
-  padding-top: 3rem !important;
-}
+/* --- SIMPLE MODE END --- */
 
 /* Left-align slick carousel in invest page when fewer slides than slidesToShow */
 .invest-carousel .slick-track { display: flex !important; justify-content: flex-start !important; }

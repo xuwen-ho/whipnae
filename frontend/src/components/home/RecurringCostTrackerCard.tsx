@@ -276,12 +276,25 @@ export function RecurringCostTrackerCard({ onExtraSavingsChange }: RecurringCost
                 role="switch"
                 aria-checked={isOn}
                 onClick={() => toggle(item)}
-                className={`relative ml-2 flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${isOn ? "bg-blue-600" : "bg-slate-300"
-                  }`}
+              //   className={`relative ml-2 flex h-6 w-11 items-center rounded-full transition-colors duration-200 ${isOn ? "bg-blue-600" : "bg-slate-300"
+              //     }`}
+              // >
+              //   <span
+              //     className={`absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${isOn ? "translate-x-5" : "translate-x-0"
+              //       }`}
+              //   />
+              className={`accessibility-toggle relative ml-2 flex h-8 w-14 items-center rounded-full border-2 transition-colors duration-200 ${
+                  isOn 
+                    ? "bg-blue-600 border-blue-600" 
+                    : "bg-white border-slate-300"
+                }`}
               >
                 <span
-                  className={`absolute left-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${isOn ? "translate-x-5" : "translate-x-0"
-                    }`}
+                  className={`absolute h-6 w-6 rounded-full shadow-md transition-transform duration-200 ${
+                    isOn 
+                      ? "translate-x-7 bg-white" 
+                      : "translate-x-0.5 bg-slate-400"
+                  }`}
                 />
               </button>
             </li>
@@ -291,7 +304,7 @@ export function RecurringCostTrackerCard({ onExtraSavingsChange }: RecurringCost
 
       {/* Your exact use case */}
       <p className="mt-4 text-xs text-slate-500">
-        Tip: If <em>Daily Coffee</em> isn’t really $6/day, click the amount to edit it, then toggle OFF to pause it.
+        Tip: If <em>Daily Coffee</em> isn’t really $10/day, click the amount to edit it, then toggle OFF to pause it.
       </p>
 
 
