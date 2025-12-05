@@ -100,8 +100,8 @@ export function ChatWidgetButton({ hasMessages = false }: ChatWidgetButtonProps)
           style={{
             width: '56px',
             height: '56px',
-            background: 'radial-gradient(circle at 30% 30%, #1e293b 0%, #0f172a 50%, #020617 100%)',
-            boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.8), 0 0 20px rgba(16, 185, 129, 0.3)',
+            background: 'radial-gradient(circle at 30% 30%, #edf1f6ff 0%, #a9aeb9ff 50%, #e8eaf4ff 100%)',
+            boxShadow: 'inset 0 2px 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(172, 253, 226, 0.3)',
           }}
         >
           {/* Brain icon */}
