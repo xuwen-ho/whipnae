@@ -18,7 +18,38 @@ const data = [
   { date: 'Dec 5', value: 36000 },
 ];
 
-const BalanceChart = ({ balance, dailyReturn }: { balance: string, dailyReturn: string }) => {
+// Calculate actual daily return (change from previous day)
+const calculateDailyReturn = () => {
+  if (data.length < 2) return { value: 0, formatted: '$0.00' };
+  const today = data[data.length - 1].value;
+  const yesterday = data[data.length - 2].value;
+  const change = today - yesterday;
+  const sign = change >= 0 ? '+' : '';
+  return {
+    value: change,
+    formatted: `${sign}$${Math.abs(change).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  };
+};
+
+// Calculate total return from beginning
+const calculateTotalReturn = () => {
+  if (data.length < 2) return { value: 0, formatted: '$0.00', percentage: '0%' };
+  const beginning = data[0].value;
+  const ending = data[data.length - 1].value;
+  const change = ending - beginning;
+  const percentage = ((change / beginning) * 100).toFixed(2);
+  const sign = change >= 0 ? '+' : '';
+  return {
+    value: change,
+    formatted: `${sign}$${Math.abs(change).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    percentage: `${sign}${percentage}%`
+  };
+};
+
+const BalanceChart = ({ balance }: { balance: string }) => {
+  const dailyReturn = calculateDailyReturn();
+  const totalReturn = calculateTotalReturn();
+  
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-8">
       <div className="flex justify-between items-start mb-4">
@@ -26,9 +57,14 @@ const BalanceChart = ({ balance, dailyReturn }: { balance: string, dailyReturn: 
           <h3 className="text-sm text-gray-500">Net Assets · SGD</h3>
           <p className="text-3xl font-bold text-gray-800">{balance}</p>
         </div>
-        <div>
+        <div className="text-right">
           <h3 className="text-sm text-gray-500">Daily Returns</h3>
-          <p className="text-xl font-bold text-green-500">{dailyReturn}</p>
+          <p className={`text-xl font-bold ${dailyReturn.value >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            {dailyReturn.formatted}
+          </p>
+          <p className={`text-sm ${totalReturn.value >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            Total: {totalReturn.formatted} ({totalReturn.percentage})
+          </p>
         </div>
       </div>
       <div style={{ width: '100%', height: 250 }}>
@@ -48,8 +84,8 @@ const BalanceChart = ({ balance, dailyReturn }: { balance: string, dailyReturn: 
         </ResponsiveContainer>
       </div>
       <div className="flex justify-between text-xs text-gray-500 mt-2">
-        <span>Beginning {data[0].value}</span>
-        <span>Ending {data[data.length - 1].value}</span>
+        <span>Beginning {data[0].value.toLocaleString()}</span>
+        <span>Ending {data[data.length - 1].value.toLocaleString()}</span>
       </div>
     </div>
   );

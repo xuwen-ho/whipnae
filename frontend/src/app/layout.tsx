@@ -7,6 +7,7 @@ import "./globals.css";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { RemoteConnectionProvider } from "@/components/remote";
 import { ChatWidgetProvider } from "@/components/chat";
+import { OnboardingProvider } from "@/components/onboarding";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +66,7 @@ export default function RootLayout({
           </RemoteConnectionProvider>
         </ChatWidgetProvider>
         <AccessibilityProvider />
+        <OnboardingProvider />
       </body>
     </html>
   );

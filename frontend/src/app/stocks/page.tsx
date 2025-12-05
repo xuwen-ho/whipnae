@@ -24,7 +24,7 @@ const StocksPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <BalanceChart balance="$120,000" dailyReturn="+120.32" />
+        <BalanceChart balance="$120,000" />
 
         <SectionHeader title="HOLDINGS" />
         <div className="space-y-3 mb-8">

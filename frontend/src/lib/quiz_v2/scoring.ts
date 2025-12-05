@@ -1,4 +1,5 @@
 import type { QuizResponse, FinancialProfile } from './types';
+import { getTopBundleRecommendations } from './bundleRecommendations';
 
 // Risk points mapping per question as provided
 const RISK_POINTS_Q2: Record<string, number> = {
@@ -83,11 +84,12 @@ export function calculateFinancialProfile(responses: QuizResponse): FinancialPro
     (RISK_POINTS_Q9[q9] || 0);
 
   const max_risk_points_total = 51; // as specified
-  const riskScore = Math.round((risk_points_total / max_risk_points_total) * 100);
+  // Calculate risk score out of 10 (with one decimal place)
+  const riskScore = Math.round((risk_points_total / max_risk_points_total) * 100) / 10;
 
   let riskCategory: FinancialProfile['riskCategory'] = 'Moderate';
-  if (riskScore <= 33) riskCategory = 'Conservative';
-  else if (riskScore <= 66) riskCategory = 'Moderate';
+  if (riskScore <= 3.3) riskCategory = 'Conservative';
+  else if (riskScore <= 6.6) riskCategory = 'Moderate';
   else riskCategory = 'Aggressive';
 
   // Expertise calculation
@@ -221,15 +223,20 @@ export function calculateFinancialProfile(responses: QuizResponse): FinancialPro
   // trim to max 6
   while (finalSuggestions.length > 6) finalSuggestions.pop();
 
+  // Build profile first without recommendations
   const profile: FinancialProfile = {
     userName: responses.userName,
     riskScore,
     riskCategory,
     expertiseLevel,
     primaryInterest,
-    timeHorizon: (responses.timeHorizon as any) || null,
+    timeHorizon: responses.timeHorizon || null,
     suggestions: finalSuggestions,
   };
+
+  // Get recommended bundle IDs and add to profile
+  const recommendations = getTopBundleRecommendations(profile, 3);
+  profile.recommendedBundles = recommendations.map(r => r.bundleId);
 
   return profile;
 }
