@@ -92,15 +92,203 @@
 #     return cards
 
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from typing import Dict, Optional
+import json
 
 # from services.llm_service import LLMService
 from database.database import fetch_transactions, compute_insights  # NEW
 from database.database import list_recurring, patch_recurring, create_recurring, ensure_database
 
 app = FastAPI()
+
+# ============== REMOTE ASSISTANCE WEBSOCKET ==============
+
+# In-memory storage for connected users
+connected_users: Dict[str, WebSocket] = {}  # user_id -> websocket
+user_names: Dict[str, str] = {}  # user_id -> user_name
+active_sessions: Dict[str, str] = {}  # controller_id -> controlled_id
+
+
+class RemoteConnectionManager:
+    """Manages WebSocket connections for remote assistance feature."""
+    
+    async def connect(self, websocket: WebSocket, user_id: str, user_name: str):
+        await websocket.accept()
+        connected_users[user_id] = websocket
+        user_names[user_id] = user_name
+        print(f"User connected: {user_id} ({user_name})")
+    
+    def disconnect(self, user_id: str):
+        if user_id in connected_users:
+            del connected_users[user_id]
+        if user_id in user_names:
+            del user_names[user_id]
+        # Clean up any active sessions
+        if user_id in active_sessions:
+            del active_sessions[user_id]
+        # Remove if being controlled
+        for controller, controlled in list(active_sessions.items()):
+            if controlled == user_id:
+                del active_sessions[controller]
+        print(f"User disconnected: {user_id}")
+    
+    async def send_to_user(self, user_id: str, message: dict):
+        if user_id in connected_users:
+            try:
+                await connected_users[user_id].send_json(message)
+                return True
+            except Exception as e:
+                print(f"Error sending to {user_id}: {e}")
+                return False
+        return False
+
+
+connection_manager = RemoteConnectionManager()
+
+
+@app.websocket("/ws/remote/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    # Get user name from query params
+    user_name = websocket.query_params.get("name", f"User {user_id}")
+    
+    await connection_manager.connect(websocket, user_id, user_name)
+    
+    try:
+        while True:
+            data = await websocket.receive_json()
+            message_type = data.get("type")
+            
+            if message_type == "connection_request":
+                # User wants to connect to another user
+                target_id = data.get("targetUserId")
+                permissions = data.get("permissions", ["view", "navigate", "interact", "chat"])
+                
+                if target_id in connected_users:
+                    # Send request to target user
+                    await connection_manager.send_to_user(target_id, {
+                        "type": "connection_request",
+                        "fromUserId": user_id,
+                        "fromUserName": user_names.get(user_id, f"User {user_id}"),
+                        "permissions": permissions
+                    })
+                    # Confirm to requester that request was sent
+                    await websocket.send_json({
+                        "type": "request_sent",
+                        "targetUserId": target_id
+                    })
+                else:
+                    # Target user not online
+                    await websocket.send_json({
+                        "type": "error",
+                        "message": "User not found or offline",
+                        "code": "USER_NOT_FOUND"
+                    })
+            
+            elif message_type == "connection_accepted":
+                # User accepted a connection request
+                requester_id = data.get("requesterId")
+                permissions = data.get("permissions", [])
+                
+                if requester_id in connected_users:
+                    # Store active session
+                    active_sessions[requester_id] = user_id
+                    
+                    # Notify requester that connection was accepted
+                    await connection_manager.send_to_user(requester_id, {
+                        "type": "connection_accepted",
+                        "controlledUserId": user_id,
+                        "controlledUserName": user_names.get(user_id, f"User {user_id}"),
+                        "permissions": permissions
+                    })
+                    
+                    # Confirm to accepter
+                    await websocket.send_json({
+                        "type": "session_started",
+                        "controllerUserId": requester_id,
+                        "controllerUserName": user_names.get(requester_id, f"User {requester_id}"),
+                        "isController": False
+                    })
+            
+            elif message_type == "connection_declined":
+                # User declined a connection request
+                requester_id = data.get("requesterId")
+                
+                if requester_id in connected_users:
+                    await connection_manager.send_to_user(requester_id, {
+                        "type": "connection_declined",
+                        "declinedBy": user_id
+                    })
+            
+            elif message_type == "navigate":
+                # Controller wants to navigate the controlled user
+                if user_id in active_sessions:
+                    controlled_id = active_sessions[user_id]
+                    await connection_manager.send_to_user(controlled_id, {
+                        "type": "navigate",
+                        "path": data.get("path")
+                    })
+            
+            elif message_type == "end_session":
+                # Either party ends the session
+                partner_id = None
+                
+                # Check if user is controller
+                if user_id in active_sessions:
+                    partner_id = active_sessions[user_id]
+                    del active_sessions[user_id]
+                else:
+                    # Check if user is being controlled
+                    for controller, controlled in list(active_sessions.items()):
+                        if controlled == user_id:
+                            partner_id = controller
+                            del active_sessions[controller]
+                            break
+                
+                if partner_id and partner_id in connected_users:
+                    await connection_manager.send_to_user(partner_id, {
+                        "type": "session_ended",
+                        "endedBy": user_id
+                    })
+                
+                await websocket.send_json({
+                    "type": "session_ended",
+                    "endedBy": user_id
+                })
+            
+            elif message_type == "cancel_request":
+                # Requester cancels their pending request
+                target_id = data.get("targetUserId")
+                if target_id in connected_users:
+                    await connection_manager.send_to_user(target_id, {
+                        "type": "request_cancelled",
+                        "cancelledBy": user_id
+                    })
+    
+    except WebSocketDisconnect:
+        # Notify partner if in active session
+        partner_id = None
+        if user_id in active_sessions:
+            partner_id = active_sessions[user_id]
+        else:
+            for controller, controlled in list(active_sessions.items()):
+                if controlled == user_id:
+                    partner_id = controller
+                    break
+        
+        if partner_id and partner_id in connected_users:
+            await connection_manager.send_to_user(partner_id, {
+                "type": "session_ended",
+                "endedBy": user_id,
+                "reason": "disconnected"
+            })
+        
+        connection_manager.disconnect(user_id)
+
+
+# ============== END REMOTE ASSISTANCE ==============
 
 
 # --- Data Models ---

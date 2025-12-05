@@ -5,6 +5,7 @@ import "./globals.css";
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
+import { RemoteConnectionProvider } from "@/components/remote";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,7 +58,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${openDyslexic.variable} antialiased`}
       >
-        {children}
+        <RemoteConnectionProvider>
+          {children}
+        </RemoteConnectionProvider>
         <AccessibilityProvider />
       </body>
     </html>

@@ -8,6 +8,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { FinancialProfileCard } from "@/components/profile/FinancialProfileCard";
 import { RecommendationsQuizCard } from "@/components/profile/RecommendationsQuizCard";
 import { SettingsToggleItem } from "@/components/profile/SettingsToggleItem";
+import { RemoteConnectionSection } from "@/components/remote";
 import type { FinancialProfile } from "@/lib/quiz/types";
 
 type AccessibilitySetting =
@@ -251,6 +252,16 @@ export default function ProfileSettingsPage() {
                   isOn={accessibilitySettings.dyslexiaFriendlyFont}
                   onToggle={() => handleToggle("dyslexiaFriendlyFont")}
                 />
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-base font-semibold text-slate-900">Remote Assistance</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Get help from a trusted family member or friend to navigate the app.
+              </p>
+              <div className="mt-4">
+                <RemoteConnectionSection />
               </div>
             </section>
           </div>
