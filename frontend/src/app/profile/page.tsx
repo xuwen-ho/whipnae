@@ -16,11 +16,6 @@ type AccessibilitySetting =
   | "visuallyImpairedMode"
   | "dyslexiaFriendlyFont";
 
-const profileNavItems = [
-  { id: "home", link: "/", label: "Home", icon: FiHome },
-  { id: "profile", link: "/profile", label: "Profile", icon: FiUser, isActive: true },
-];
-
 export default function ProfileSettingsPage() {
   const router = useRouter();
   const [accessibilitySettings, setAccessibilitySettings] = useState<Record<AccessibilitySetting, boolean>>({
@@ -36,32 +31,32 @@ export default function ProfileSettingsPage() {
 
   // Load saved profile, insights, and accessibility settings from localStorage on mount
   useEffect(() => {
-    const savedProfile = localStorage.getItem('whipnae-user-profile');
+    const savedProfile = localStorage.getItem("whipnae-user-profile");
     if (savedProfile) {
       try {
         const profile = JSON.parse(savedProfile) as FinancialProfile;
         setUserProfile(profile);
-        // Don't auto-generate insights on load to avoid quota issues
+        // Don"t auto-generate insights on load to avoid quota issues
         // User can manually trigger with the regenerate button
       } catch (error) {
-        console.error('Failed to load profile:', error);
+        console.error("Failed to load profile:", error);
       }
     }
 
     // Load saved insights if they exist
-    const savedInsights = localStorage.getItem('whipnae-ai-insights');
+    const savedInsights = localStorage.getItem("whipnae-ai-insights");
     if (savedInsights) {
       try {
         const insightsData = JSON.parse(savedInsights);
         setAiInsights(insightsData.insights || []);
-        setPersonalizationSummary(insightsData.personalizationSummary || '');
+        setPersonalizationSummary(insightsData.personalizationSummary || "");
       } catch (error) {
-        console.error('Failed to load insights:', error);
+        console.error("Failed to load insights:", error);
       }
     }
 
     // Load saved accessibility settings
-    const savedSettings = localStorage.getItem('whipnae-accessibility-settings');
+    const savedSettings = localStorage.getItem("whipnae-accessibility-settings");
     if (savedSettings) {
       try {
         const settings = JSON.parse(savedSettings);
@@ -69,20 +64,20 @@ export default function ProfileSettingsPage() {
 
         // Apply dyslexic font if enabled
         if (settings.dyslexiaFriendlyFont) {
-          document.body.classList.add('dyslexic-font');
+          document.body.classList.add("dyslexic-font");
         }
 
         // Apply simple mode if enabled
         if (settings.simpleMode) {
-          document.body.classList.add('simple-mode');
+          document.body.classList.add("simple-mode");
         }
 
         // Apply visually impaired mode if enabled
         if (settings.visuallyImpairedMode) {
-          document.body.classList.add('visually-impaired-mode');
+          document.body.classList.add("visually-impaired-mode");
         }
       } catch (error) {
-        console.error('Failed to load accessibility settings:', error);
+        console.error("Failed to load accessibility settings:", error);
       }
     }
   }, []);
@@ -91,10 +86,10 @@ export default function ProfileSettingsPage() {
     setIsLoadingInsights(true);
 
     try {
-      const response = await fetch('/api/profile/insights', {
-        method: 'POST',
+      const response = await fetch("/api/profile/insights", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           userName: profile.userName,
@@ -108,7 +103,7 @@ export default function ProfileSettingsPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate insights');
+        throw new Error("Failed to generate insights");
       }
 
       const data = await response.json();
@@ -116,12 +111,12 @@ export default function ProfileSettingsPage() {
       setPersonalizationSummary(data.personalizationSummary);
 
       // Save insights to localStorage for persistence
-      localStorage.setItem('whipnae-ai-insights', JSON.stringify({
+      localStorage.setItem("whipnae-ai-insights", JSON.stringify({
         insights: data.insights,
         personalizationSummary: data.personalizationSummary,
       }));
     } catch (error) {
-      console.error('Error generating insights:', error);
+      console.error("Error generating insights:", error);
       // Show friendly error state
       setAiInsights([]);
     } finally {
@@ -143,37 +138,40 @@ export default function ProfileSettingsPage() {
       };
 
       // Save to localStorage
-      localStorage.setItem('whipnae-accessibility-settings', JSON.stringify(newSettings));
+      localStorage.setItem(
+        "whipnae-accessibility-settings",
+        JSON.stringify(newSettings)
+      );
 
       // Apply dyslexic font immediately
-      if (setting === 'dyslexiaFriendlyFont') {
+      if (setting === "dyslexiaFriendlyFont") {
         if (newSettings.dyslexiaFriendlyFont) {
-          document.body.classList.add('dyslexic-font');
+          document.body.classList.add("dyslexic-font");
         } else {
-          document.body.classList.remove('dyslexic-font');
+          document.body.classList.remove("dyslexic-font");
         }
       }
 
       // Apply simple mode immediately
-      if (setting === 'simpleMode') {
+      if (setting === "simpleMode") {
         if (newSettings.simpleMode) {
-          document.body.classList.add('simple-mode');
+          document.body.classList.add("simple-mode");
         } else {
-          document.body.classList.remove('simple-mode');
+          document.body.classList.remove("simple-mode");
         }
       }
 
       // Apply visually impaired mode immediately
-      if (setting === 'visuallyImpairedMode') {
+      if (setting === "visuallyImpairedMode") {
         if (newSettings.visuallyImpairedMode) {
-          document.body.classList.add('visually-impaired-mode');
+          document.body.classList.add("visually-impaired-mode");
         } else {
-          document.body.classList.remove('visually-impaired-mode');
+          document.body.classList.remove("visually-impaired-mode");
         }
       }
 
       // Dispatch custom event to notify other components
-      window.dispatchEvent(new Event('accessibility-settings-changed'));
+      window.dispatchEvent(new Event("accessibility-settings-changed"));
 
       return newSettings;
     });
@@ -181,8 +179,8 @@ export default function ProfileSettingsPage() {
 
   const handleStartQuiz = () => {
     // Set flag to start from step 1
-    sessionStorage.setItem('whipnae-quiz-restart', 'true');
-    router.push('/profile/quiz');
+    sessionStorage.setItem("whipnae-quiz-restart", "true");
+    router.push("/profile/quiz");
   };
 
   return (
@@ -270,7 +268,7 @@ export default function ProfileSettingsPage() {
         </div>
       </main>
 
-      <BottomNav items={profileNavItems} />
+      <BottomNav />
     </div>
   );
 }

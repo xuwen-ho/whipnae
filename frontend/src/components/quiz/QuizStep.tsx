@@ -1,4 +1,4 @@
-import type { QuizStep as QuizStepType, PartialQuizResponse } from '@/lib/quiz/types';
+import type { QuizStep as QuizStepType, PartialQuizResponse } from '@/lib/quiz_v2/types';
 import { QuestionCard } from './QuestionTypes/QuestionCard';
 import { SingleSelect } from './QuestionTypes/SingleSelect';
 import { MultiSelect } from './QuestionTypes/MultiSelect';
@@ -21,8 +21,8 @@ export function QuizStep({ step, responses, errors, onResponseChange }: QuizStep
 
       <div className="space-y-8">
         {step.questions.map((question) => {
-          const value = responses[question.id];
-          const error = errors[question.id];
+          const value = (responses as any)[question.id];
+          const error = (errors as any)[question.id];
 
           return (
             <QuestionCard

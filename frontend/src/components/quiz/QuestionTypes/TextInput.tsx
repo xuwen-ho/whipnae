@@ -1,4 +1,4 @@
-import type { QuizQuestion } from '@/lib/quiz/types';
+import type { QuizQuestion } from '@/lib/quiz_v2/types';
 
 type TextInputProps = {
   question: QuizQuestion;
