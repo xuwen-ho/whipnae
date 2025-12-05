@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { QuizContainer } from '@/components/quiz/QuizContainer';
-import type { FinancialProfile } from '@/lib/quiz/types';
+import type { FinancialProfile } from '@/lib/quiz_v2/types';
 
 export default function QuizPage() {
   const router = useRouter();

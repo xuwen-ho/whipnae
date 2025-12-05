@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import type { PartialQuizResponse, FinancialProfile } from '@/lib/quiz/types';
-import { quizSteps } from '@/lib/quiz/questions';
-import { validateStep, isCompleteResponse } from '@/lib/quiz/validation';
-import { calculateFinancialProfile } from '@/lib/quiz/scoring';
+import type { PartialQuizResponse, FinancialProfile } from '@/lib/quiz_v2/types';
+import { quizSteps } from '@/lib/quiz_v2/questions';
+import { validateStep, isCompleteResponse } from '@/lib/quiz_v2/validation';
+import { calculateFinancialProfile } from '@/lib/quiz_v2/scoring';
 import { QuizProgress } from './QuizProgress';
 import { QuizStep } from './QuizStep';
 import { QuizResults } from './QuizResults';
@@ -72,9 +72,9 @@ export function QuizContainer({ onComplete, onSave }: QuizContainerProps) {
     }
   }, [responses, currentStepId, isLoading]);
 
-  const currentStep = quizSteps.find((s) => s.id === currentStepId);
-  const isLastStep = currentStepId === quizSteps.length;
-  const isFirstStep = currentStepId === 1;
+  const currentStep = quizSteps.find((s) => s.id === currentStepId) || quizSteps[0];
+  const isLastStep = currentStep.id === quizSteps[quizSteps.length - 1].id;
+  const isFirstStep = currentStep.id === quizSteps[0].id;
 
   const handleResponseChange = (questionId: string, value: string | string[]) => {
     setResponses((prev) => ({

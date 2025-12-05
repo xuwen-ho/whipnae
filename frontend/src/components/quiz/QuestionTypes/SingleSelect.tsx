@@ -1,4 +1,4 @@
-import type { QuestionOption } from '@/lib/quiz/types';
+import type { QuestionOption } from '@/lib/quiz_v2/types';
 
 type SingleSelectProps = {
   options: QuestionOption[];
