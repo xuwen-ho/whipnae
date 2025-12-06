@@ -1,117 +1,156 @@
-# whipnae
+# Whipnae
 
-我们为2025年深圳金融科技马拉松打造的金融科技助手。目标是将对话式AI助手与轻量级金融工具相结合。
+Whipnae is a bilingual finance companion with a Next.js frontend and a FastAPI backend. This README focuses on getting your local environment running quickly.
 
-## 技术栈
-- **前端：** Next.js 16 (App Router)、React 19、Tailwind CSS v4、TypeScript、ESLint
-- **后端：** FastAPI、LangChain、OpenAI SDK、SQLite（计划使用 SQLModel/SQLAlchemy）
-- **基础设施与工具：** pnpm 或 npm、Python 3.11+、uvicorn、dotenv
+## Repository layout
+```
+whipnae/
+├── backend/   # FastAPI app + SQLite helpers
+├── frontend/  # Next.js 16 App Router UI
+├── package.json
+└── README.md
+```
 
-## 快速开始
+## Requirements
+- Node.js 20 (or newer) with `npm`
+- Python 3.11+
+- OpenRouter API key for conversational + profile AI features (optional but recommended)
 
-### 前置要求
-- Node.js 20 LTS（Next.js 16 要求）以及您喜欢的包管理器（`npm`、`pnpm` 或 `yarn`）
-- Python 3.11+ 以及 `pip`
-- 用于 LLM 功能的 OpenAI（或兼容）API 密钥
+## Tech stack
+- Frontend: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4
+- Backend: FastAPI, Uvicorn, Pydantic v2, SQLite
+- AI: OpenRouter API (optional backend Gemini stub)
 
-### 前端设置
+![Whipnae full-stack diagram](frontend/public/images/diagram.jpg)
+
+The diagram above shows how the Next.js frontend, FastAPI backend, and OpenRouter services communicate over REST and WebSocket channels.
+
+## Environment variables
+Create the files below before starting the servers.
+
+### `frontend/.env.local`
+```
+OPENROUTER_API_KEY=sk-...
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000
+```
+
+### `backend/.env` (optional)
+```
+GEMINI_API_KEY=your-key-if-used
+```
+
+## Backend setup
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+- The server seeds `frontend/src/lib/db/transactions.db` on first run.
+- REST endpoints live under `http://localhost:8000`, WebSocket remote assist runs on `ws://localhost:8000/ws/remote/{user_id}`.
+
+## Frontend setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-开发服务器运行在 `http://localhost:3000`。Tailwind 和 ESLint 已预配置；在提交 UI 更改前请运行 `npm run lint`。
+- App is available at `http://localhost:3000`.
+- Run `npm run lint` before committing UI changes.
 
-### 后端设置
+## Running both services
+Use two terminals from the project root:
+
+```bash
+# Terminal 1
+cd backend
+source venv/bin/activate
+uvicorn main:app --reload
+
+# Terminal 2
+cd frontend
+npm run dev
+```
+
+## Useful scripts
+- Frontend build: `npm run build`
+- Frontend lint: `npm run lint`
+- Backend hot reload: `uvicorn main:app --reload`
+
+## Troubleshooting
+- Delete `frontend/src/lib/db/transactions.db` if you need a fresh seed; it will regenerate on the next backend start.
+- Check that `OPENROUTER_API_KEY` is set if chat or profile insights return 401 errors.
+- Ensure both servers are running before using remote assistance or AI features.
+
+## 中文说明
+
+### 项目简介
+Whipnae 是一个双语金融助手，前端使用 Next.js，后端使用 FastAPI。本说明主要帮助你快速在本地运行前后端服务。
+
+### 技术栈
+- 前端：Next.js 16（App Router）、React 19、TypeScript、Tailwind CSS v4
+- 后端：FastAPI、Uvicorn、Pydantic v2、SQLite
+- AI：OpenRouter API（可选的后端 Gemini 封装）
+
+![Whipnae 全栈示意图](frontend/public/images/tech-stack-diagram.svg)
+
+上图展示了前端、后端与 OpenRouter 服务之间通过 REST 与 WebSocket 通道协作的方式。
+
+### 前置条件
+- 安装 Node.js 20 及以上版本（包含 `npm`）
+- 安装 Python 3.11 及以上版本
+- 获取 OpenRouter API Key（用于会话和画像功能，可选但推荐）
+
+### 环境变量
+在项目根目录创建：
+
+`frontend/.env.local`
+```
+OPENROUTER_API_KEY=sk-...
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
+NEXT_PUBLIC_WS_URL=ws://localhost:8000
+```
+
+`backend/.env`（如需启用 Gemini）
+```
+GEMINI_API_KEY=你的Key
+```
+
+### 启动后端
 ```bash
 cd backend
 python3 -m venv venv
-source venv/bin/activate  # Windows 系统: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
-FastAPI 服务器将在 `http://localhost:8000` 运行。
+首次启动会自动生成 `frontend/src/lib/db/transactions.db` 数据库。REST 接口默认在 `http://localhost:8000`，远程协助 WebSocket 位于 `ws://localhost:8000/ws/remote/{user_id}`。
 
-### 环境变量设置 ⚠️
-
-**在运行服务器之前**，请配置您的环境变量：
-
-**前端环境变量：**
-   - 创建 `frontend/.env.local` 文件并添加以下内容：
-     ```
-     OPENROUTER_API_KEY=your_openrouter_api_key_here
-     ```
-
-### 快速启动（两个服务器）
-
-从项目根目录，在两个独立的终端中启动服务器：
-
-**终端 1（后端）：**
-```bash
-cd backend && source venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-**终端 2（前端）：**
-```bash
-cd frontend && npm run dev
-```
-
----
-
-# whipnae
-
-FinTech co-pilot we are building for the 2025 ShenZhen FinTechathon. The goal is to pair a conversational AI assistant with lightweight financial tooling.
-
-## Tech Stack
-- **Frontend:** Next.js 16 (App Router), React 19, Tailwind CSS v4, TypeScript, ESLint
-- **Backend:** FastAPI, LangChain, OpenAI SDK, SQLite (via SQLModel/SQLAlchemy planned)
-- **Infra & Tooling:** pnpm or npm, Python 3.11+, uvicorn, dotenv
-
-## Getting Started
-
-### Prerequisites
-- Node.js 20 LTS (Next.js 16 requirement) and your preferred package manager (`npm`, `pnpm`, or `yarn`).
-- Python 3.11+ plus `pip`.
-- An OpenAI (or compatible) API key for LLM features.
-
-### Frontend Setup
+### 启动前端
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-The dev server runs at `http://localhost:3000`. Tailwind and ESLint are preconfigured; run `npm run lint` before committing UI changes.
+前端默认访问地址为 `http://localhost:3000`。提交代码前可运行 `npm run lint`。
 
-### Backend Setup
+### 同时运行前后端
+打开两个终端：
+
 ```bash
+# 终端 1（后端）
 cd backend
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-The FastAPI server will be available at `http://localhost:8000`.
+source venv/bin/activate
+uvicorn main:app --reload
 
-### Environment Variables Setup ⚠️
-
-**Before running the servers**, configure your environment variables:
-
-**Frontend Environment Variables:**
-   - Create `frontend/.env.local` with the following:
-     ```
-     OPENROUTER_API_KEY=your_openrouter_api_key_here
-     ```
-
-### Quick Start (Both Servers)
-
-From the project root, start both servers in separate terminals:
-
-**Terminal 1 (Backend):**
-```bash
-cd backend && source venv/bin/activate && uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# 终端 2（前端）
+cd frontend
+npm run dev
 ```
 
-**Terminal 2 (Frontend):**
-```bash
-cd frontend && npm run dev
-```
+### 常见问题
+- 如需重置示例数据，删除 `frontend/src/lib/db/transactions.db` 后重新启动后端。
+- 如果聊天或画像接口返回 401，请检查 `OPENROUTER_API_KEY` 是否已配置。
+- 使用远程协助或 AI 功能前，请确认前后端服务均已运行。
