@@ -1,0 +1,21 @@
+
+> frontend@0.1.0 start
+> next start
+
+ ⨯ Failed to start server
+Error: listen EADDRINUSE: address already in use :::3000
+    at <unknown> (Error: listen EADDRINUSE: address already in use :::3000)
+    at new Promise (<anonymous>) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '::',
+  port: 3000
+}
+npm error Lifecycle script `start` failed with error:
+npm error code 1
+npm error path /Users/isabellaatan/WHIPNAE_FINALS/whipnae/frontend
+npm error workspace frontend@0.1.0
+npm error location /Users/isabellaatan/WHIPNAE_FINALS/whipnae/frontend
+npm error command failed
+npm error command sh -c next start

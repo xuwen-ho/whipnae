@@ -92,6 +92,27 @@ body.simple-mode input[type="radio"] {
   margin-right: 12px;
   transform: translateY(6px); /* Align with the new larger text */
 }
+
+/* Ensure icons remain visible in simple mode */
+body.simple-mode .icon {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure ConnectionSetupCard icons are not affected by simple-mode */
+body.simple-mode .connection-setup-card button {
+  min-height: auto !important;
+  font-size: inherit !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+body.simple-mode .connection-setup-card .icon {
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
 /* --- SIMPLE MODE END --- */
 
 /* Left-align slick carousel in invest page when fewer slides than slidesToShow */

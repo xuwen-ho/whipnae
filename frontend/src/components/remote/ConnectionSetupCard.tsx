@@ -57,15 +57,15 @@ export function ConnectionSetupCard({
   };
 
   return (
-    <div className="rounded-3xl bg-white p-6 shadow-sm">
+    <div className="connection-setup-card rounded-3xl bg-white p-6 shadow-sm">
       {/* Header with back button */}
       <div className="mb-6 flex items-center gap-3">
-        <button
+          <button
           onClick={onBack}
           className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 transition hover:bg-slate-200"
           aria-label="Go back"
         >
-          <FiArrowLeft className="h-5 w-5 text-slate-600" />
+          <FiArrowLeft className="h-5 w-5 text-slate-600 icon" />
         </button>
         <h3 className="text-lg font-semibold text-slate-900">Remote Connection Setup</h3>
       </div>
@@ -116,14 +116,14 @@ export function ConnectionSetupCard({
             className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-300 bg-white transition hover:bg-slate-50"
             aria-label="Copy User ID"
           >
-            <FiCopy className={`h-5 w-5 ${copied ? "text-green-600" : "text-slate-600"}`} />
+            <FiCopy className={`h-5 w-5 icon ${copied ? "text-green-600" : "text-slate-600"}`} />
           </button>
           <button
             onClick={handleShare}
             className="flex h-12 w-12 items-center justify-center rounded-xl border border-slate-300 bg-white transition hover:bg-slate-50"
             aria-label="Share User ID"
           >
-            <FiShare2 className="h-5 w-5 text-slate-600" />
+            <FiShare2 className="h-5 w-5 text-slate-600 icon" />
           </button>
         </div>
         {copied && (
@@ -144,7 +144,7 @@ export function ConnectionSetupCard({
                 className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 transition hover:bg-slate-50"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100">
-                  <FiUser className="h-5 w-5 text-slate-500" />
+                  <FiUser className="h-5 w-5 text-slate-500 icon" />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-sm font-medium text-slate-900">{connection.userName}</p>

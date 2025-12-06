@@ -48,7 +48,7 @@ export function OnboardingModal({
               <p className="text-lg leading-relaxed text-slate-700">
                 <span className="mr-1">👋</span>
                 <strong className="text-amber-700">Hey there!</strong> We noticed you prefer larger text. 
-                Want us to turn on easy-read mode?
+                Want us to turn on simple mode?
               </p>
             ) : (
               <p className="text-lg leading-relaxed text-slate-700">
@@ -66,7 +66,7 @@ export function OnboardingModal({
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1c3d8f] px-4 py-4 text-base font-semibold text-white shadow-lg shadow-blue-900/20 transition-all hover:bg-[#15306f] hover:shadow-xl active:scale-[0.98]"
             >
               <FiCheck className="h-5 w-5" />
-              Yes, enable easy mode
+              Yes, enable simple mode
             </button>
             <button
               onClick={onSkip}

@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "pip": "^0.0.1"
+    "pip": "^0.0.1",
     "@ai-sdk/google": "^2.0.31",
     "@openrouter/ai-sdk-provider": "^1.2.2",
     "ai": "^5.0.93",
