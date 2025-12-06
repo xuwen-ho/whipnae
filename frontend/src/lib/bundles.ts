@@ -1,34 +1,4 @@
-// Type definitions for bundles
-export interface BundleAsset {
-  symbol: string;
-  name: string;
-  targetAllocation: number;
-  reason: string;
-  price: string;
-}
-
-export interface BundlePastReturns {
-  ytd: string;
-  oneY: string;
-  threeY: string;
-  fiveY: string;
-  note: string;
-}
-
-export interface Bundle {
-  id: string;
-  title: string;
-  riskLevel: string;
-  description: string;
-  stocks: string[];
-  imageUrl: string;
-  whatsInBundle: string;
-  atAGlance: string[];
-  pastReturns: BundlePastReturns;
-  assets: BundleAsset[];
-}
-
-export const bundles: Bundle[] = [
+export const bundles = [
   {
     id: 'tech-bundle',
     title: 'Tech Bundle',
@@ -63,7 +33,7 @@ export const bundles: Bundle[] = [
     id: 'electric-autonomous-bundle',
     title: 'Motor Bundle',
     riskLevel: '8/10',
-    description: 'The leading US-traded companies in the electric and autonomous vehicle industry.',
+    description: 'Traded companies in the electric and autonomous vehicle industry.',
     stocks: ['GM', 'BIDU', 'TSLA', 'MBLY', 'BYDDY', 'NIO'],
     imageUrl: '/images/bundles/electric-autonomous-bundle.png',
     whatsInBundle:
@@ -154,7 +124,7 @@ export const bundles: Bundle[] = [
     id: 'media-bundle',
     title: 'Media Bundle',
     riskLevel: '6/10',
-    description: 'A curated selection of the largest streaming and gaming companies, with big names like Netflix and Spotify.',
+    description: 'A curated selection of the largest streaming and gaming companies.',
     stocks: ['NFLX', 'SPOT', 'U', 'DIS', 'RBLX', 'EA'],
     imageUrl: '/images/bundles/media-bundle.png',
     whatsInBundle:

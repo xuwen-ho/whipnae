@@ -48,10 +48,10 @@ const StocksPage = () => {
           <div className="relative mb-4">
             <input
               type="text"
-              placeholder="Search stocks..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="     Search Stocks..."
+              className="search-input w-full pl-10 pr-4 py-2 border rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <FiSearch className="absolute top-3 left-3 text-gray-400" />
+            <FiSearch className="search-icon absolute top-3 left-3 text-gray-400" />
           </div>
           <div className="space-y-3">
             {WATCHLIST.map((s, idx) => {

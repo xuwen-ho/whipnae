@@ -113,6 +113,28 @@ body.simple-mode .connection-setup-card .icon {
   visibility: visible !important;
   opacity: 1 !important;
 }
+
+/* Prevent icon overlap in Stocks search when simple-mode is enabled */
+body.simple-mode .search-input {
+  padding-left: 3rem !important; /* preserve larger padding in simple mode */
+}
+body.simple-mode .search-icon {
+  left: 1rem !important; /* preserve icon offset */
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  color: #9CA3AF !important; /* text-gray-400 */
+}
+
+/* Ensure stocks search input keeps left padding by default */
+.search-input {
+  padding-left: 3rem !important; /* increased from 2.5rem to 3rem to avoid overlap */
+}
+.search-icon {
+  left: 1rem !important; /* moved from 0.75rem to 1rem */
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
 /* --- SIMPLE MODE END --- */
 
 /* Left-align slick carousel in invest page when fewer slides than slidesToShow */
